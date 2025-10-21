@@ -39,7 +39,7 @@ export default function Navbar() {
           All Courses
         </Link>
 
-        {/* ✅ If user is logged in, show profile menu */}
+       
         {token ? (
           <div className="relative">
             <button
@@ -74,7 +74,7 @@ export default function Navbar() {
             )}
           </div>
         ) : (
-          // ✅ If logged out, show Login/Signup buttons
+
           <div className="flex items-center gap-3">
             <Link
               to="/login"
