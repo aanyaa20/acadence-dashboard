@@ -7,12 +7,19 @@ import completeImg from "../assets/complete.png";
 
 export default function Courses() {
   const courses = [
-    
     {
       id: 1,
       title: "The Complete Full-Stack Web Development Bootcamp",
       image: devImg,
       progress: 60,
+      link: "https://www.udemy.com/course/the-complete-web-development-bootcamp/learn/lecture/41780544?start=0#overview"
+    },
+    {
+      id: 2,
+      title: "Mastering Data Structures & Algorithms using C and C++",
+      image: dsaImg,
+      progress: 40,
+      link: "https://www.udemy.com/course/datastructurescncpp/learn/lecture/13319372?start=15#overview",
     },
     {
       id: 3,
@@ -20,11 +27,10 @@ export default function Courses() {
       image: completeImg,
       progress: 20,
     },
-    
   ];
 
   return (
-    <div className="p-8 text-white">
+    <div className="pt-24 p-8 text-white">
       {/* Header */}
       <header className="mb-10">
         <h1 className="text-4xl font-extrabold mb-2 bg-gradient-to-r from-indigo-400 to-blue-400 bg-clip-text text-transparent flex items-center gap-3">
@@ -58,9 +64,22 @@ export default function Courses() {
               <p className="text-sm text-indigo-200 mb-4">
                 {course.progress}% completed
               </p>
-              <button className="px-4 py-2 bg-indigo-500 hover:bg-indigo-600 rounded-lg text-sm font-medium">
-                Continue
-              </button>
+
+              {/* Continue Button */}
+              {course.link ? (
+                <a
+                  href={course.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block px-4 py-2 bg-indigo-500 hover:bg-indigo-600 rounded-lg text-sm font-medium text-center"
+                >
+                  Continue
+                </a>
+              ) : (
+                <button className="px-4 py-2 bg-indigo-500 hover:bg-indigo-600 rounded-lg text-sm font-medium">
+                  Continue
+                </button>
+              )}
             </div>
           </div>
         ))}

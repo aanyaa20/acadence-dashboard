@@ -11,7 +11,7 @@ export default function Home() {
     <div className="bg-slate-900 text-white min-h-screen flex flex-col">
       {/* Hero Section */}
       <section
-        className="relative min-h-screen flex items-center pt-20"
+        className="relative min-h-screen flex items-center pt-32"
         style={{
           backgroundImage: `url(${heroImg})`,
           backgroundSize: "cover",

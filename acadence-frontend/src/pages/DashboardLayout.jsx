@@ -90,7 +90,7 @@ export default function DashboardLayout() {
 
       {/* Main content */}
       <main className="flex-1">
-        <div className="p-8">
+        <div className="p-8 pt-24">
           <Outlet />
         </div>
       </main>

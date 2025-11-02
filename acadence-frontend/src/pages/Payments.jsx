@@ -31,7 +31,7 @@ export default function Payments() {
   ];
 
   return (
-    <div className="p-8 text-white">
+    <div className="p-8 pt-24 text-white">
       {/* Title */}
       <h1 className="text-3xl font-extrabold mb-6">💳 Payments & Billing</h1>
       <p className="text-gray-300 mb-8">

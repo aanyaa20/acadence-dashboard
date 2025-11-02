@@ -68,7 +68,7 @@ export default function Progress() {
   ];
 
   return (
-    <div className="p-8 text-white">
+    <div className="p-8 pt-24 text-white">
       {/* Header */}
       <header className="mb-10">
         <h1 className="text-4xl font-extrabold mb-2 bg-gradient-to-r from-indigo-400 to-blue-400 bg-clip-text text-transparent flex items-center gap-3">

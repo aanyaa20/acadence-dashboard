@@ -7,7 +7,7 @@ export default function Settings() {
   const [darkMode, setDarkMode] = useState(true);
 
   return (
-    <div className="flex justify-center items-start py-10 px-4 text-white">
+    <div className="flex justify-center items-start pt-24 py-10 px-4 text-white">
       <div className="w-full max-w-2xl bg-gradient-to-br from-indigo-900 to-indigo-1000 rounded-2xl shadow-xl p-8">
         
         {/* Title */}

@@ -1,0 +1,54 @@
+-- Users Table
+CREATE TABLE users (
+  id VARCHAR(36) PRIMARY KEY DEFAULT (UUID()),
+  email VARCHAR(255) UNIQUE NOT NULL,
+  password VARCHAR(255) NOT NULL,
+  name VARCHAR(255) NOT NULL,
+  theme ENUM('light', 'dark') DEFAULT 'light',
+  totalPoints INT DEFAULT 0,
+  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Courses Table
+CREATE TABLE courses (
+  id VARCHAR(36) PRIMARY KEY DEFAULT (UUID()),
+  userId VARCHAR(36) NOT NULL,
+  title VARCHAR(255) NOT NULL,
+  topic VARCHAR(255) NOT NULL,
+  description TEXT,
+  totalLessons INT DEFAULT 0,
+  completedLessons INT DEFAULT 0,
+  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE,
+  INDEX idx_userId (userId)
+);
+
+-- Lessons Table
+CREATE TABLE lessons (
+  id VARCHAR(36) PRIMARY KEY DEFAULT (UUID()),
+  courseId VARCHAR(36) NOT NULL,
+  title VARCHAR(255) NOT NULL,
+  content LONGTEXT NOT NULL,
+  points INT DEFAULT 10,
+  completed BOOLEAN DEFAULT FALSE,
+  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (courseId) REFERENCES courses(id) ON DELETE CASCADE,
+  INDEX idx_courseId (courseId)
+);
+
+-- Quizzes Table (modified to include questions as JSON array and score)
+CREATE TABLE quizzes (
+  id VARCHAR(36) PRIMARY KEY DEFAULT (UUID()),
+  courseId VARCHAR(36) NOT NULL,
+  title VARCHAR(255) NOT NULL,
+  description TEXT,
+  questions JSON NOT NULL, -- Array of question objects: [{ques: "question text", answer: "correct answer"}, ...]
+  score INT NOT NULL, -- Key score for the quiz
+  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (courseId) REFERENCES courses(id) ON DELETE CASCADE,
+  INDEX idx_courseId (courseId)
+);

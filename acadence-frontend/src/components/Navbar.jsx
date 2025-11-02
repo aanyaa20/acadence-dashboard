@@ -18,7 +18,7 @@ export default function Navbar() {
   }
 
   return (
-    <nav className="bg-indigo-900 text-white px-6 py-4 flex justify-between items-center shadow-md relative">
+    <nav className="bg-indigo-900 text-white px-6 py-4 flex justify-between items-center shadow-md fixed top-0 left-0 w-full z-50">
       {/* Left: Logo + Brand */}
       <div className="flex items-center gap-3 text-2xl font-bold">
         <img src={logo} alt="Acadence Logo" className="w-10 h-10 rounded-full" />
