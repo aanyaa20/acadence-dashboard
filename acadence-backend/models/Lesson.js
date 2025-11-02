@@ -15,6 +15,14 @@ const lessonSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  order: {
+    type: Number,
+    default: 1
+  },
+  duration: {
+    type: String,
+    trim: true
+  },
   points: {
     type: Number,
     default: 10

@@ -1,6 +1,9 @@
-// src/pages/Courses.jsx
-import React from "react";
-import { FaStar, FaStarHalfAlt, FaRegStar } from "react-icons/fa";
+// src/pages/AllCourses.jsx
+import React, { useState, useContext } from "react";
+import { useNavigate } from "react-router-dom";
+import { FaStar, FaStarHalfAlt, FaRegStar, FaRobot } from "react-icons/fa";
+import toast from "react-hot-toast";
+import axios from "axios";
 import devImg from "../assets/dev.png";
 import completeImg from "../assets/complete.png";
 import dsaImg from "../assets/dsa.png";
@@ -13,8 +16,15 @@ import ui from "../assets/ui.png";
 import aws from "../assets/aws.png";
 import datasci from "../assets/datasci.png";
 import python1 from "../assets/python1.png";
+import GenerateCourseDialog from "../components/GenerateCourseDialog";
+import { AuthContext } from "../context/AuthContext";
+import API_BASE_URL from "../config";
 
 export default function Courses() {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const { token } = useContext(AuthContext);
+  const navigate = useNavigate();
   const allCourses = [
     {
       id: 1,
@@ -130,6 +140,40 @@ export default function Courses() {
     },
   ];
 
+  const handleGenerateCourse = async (formData) => {
+    setIsGenerating(true);
+    try {
+      const response = await axios.post(
+        `${API_BASE_URL}/api/generate-course`,
+        {
+          topic: formData.topic,
+          difficulty: formData.difficulty,
+          numberOfLessons: parseInt(formData.numberOfLessons),
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      toast.success("Course generated successfully! 🎉");
+      setIsDialogOpen(false);
+      
+      // Navigate to the generated course details page
+      const courseId = response.data.course._id;
+      navigate(`/course/${courseId}`);
+    } catch (error) {
+      console.error("Error generating course:", error);
+      toast.error(
+        error.response?.data?.error || "Failed to generate course. Please try again."
+      );
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   const renderStars = (rating) => {
     const stars = [];
     for (let i = 1; i <= 5; i++) {
@@ -143,10 +187,22 @@ export default function Courses() {
   return (
     <div className="bg-slate-900 min-h-screen text-white pt-24 pb-12 px-6">
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-4xl font-bold mb-2 text-indigo-400">All Courses</h1>
-        <p className="text-gray-400 mb-10">
-          Browse from our top-rated courses and start learning 🚀
-        </p>
+        {/* Header with Generate Button */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-10">
+          <div>
+            <h1 className="text-4xl font-bold mb-2 text-indigo-400">All Courses</h1>
+            <p className="text-gray-400">
+              Browse from our top-rated courses and start learning 🚀
+            </p>
+          </div>
+          <button
+            onClick={() => setIsDialogOpen(true)}
+            className="mt-4 md:mt-0 px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 rounded-lg font-semibold flex items-center gap-2 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+          >
+            <FaRobot className="text-xl" />
+            Generate AI Course
+          </button>
+        </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
           {allCourses.map((course) => (
@@ -196,6 +252,14 @@ export default function Courses() {
           ))}
         </div>
       </div>
+
+      {/* Generate Course Dialog */}
+      <GenerateCourseDialog
+        isOpen={isDialogOpen}
+        onClose={() => setIsDialogOpen(false)}
+        onGenerate={handleGenerateCourse}
+        isGenerating={isGenerating}
+      />
     </div>
   );
 }

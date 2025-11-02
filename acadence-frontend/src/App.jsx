@@ -9,6 +9,7 @@ import DashboardLayout from "./pages/DashboardLayout";
 import Dashboard from "./pages/Dashboard";
 import Courses from "./pages/Courses";
 import AllCourses from "./pages/AllCourses";
+import CourseDetails from "./pages/CourseDetails";
 import Progress from "./pages/Progress";
 import Payments from "./pages/Payments";
 import Settings from "./pages/Settings";
@@ -25,6 +26,16 @@ export default function App() {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+
+        {/* ✅ Protected Course Details route (outside dashboard layout for full width) */}
+        <Route
+          path="/course/:courseId"
+          element={
+            <ProtectedRoute>
+              <CourseDetails />
+            </ProtectedRoute>
+          }
+        />
 
         {/* ✅ Protected Dashboard routes */}
         <Route

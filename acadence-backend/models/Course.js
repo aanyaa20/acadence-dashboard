@@ -20,6 +20,19 @@ const courseSchema = new mongoose.Schema({
     type: String,
     trim: true
   },
+  difficulty: {
+    type: String,
+    enum: ['beginner', 'intermediate', 'advanced'],
+    default: 'beginner'
+  },
+  estimatedDuration: {
+    type: String,
+    trim: true
+  },
+  learningObjectives: [{
+    type: String,
+    trim: true
+  }],
   totalLessons: {
     type: Number,
     default: 0
