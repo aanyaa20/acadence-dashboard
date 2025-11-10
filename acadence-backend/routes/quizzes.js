@@ -163,7 +163,8 @@ router.delete('/:id', authenticateToken, async (req, res) => {
 // Submit quiz and check answers
 router.post('/:id/submit', authenticateToken, async (req, res) => {
   try {
-    const { answers } = req.body; // Array of answer strings in the same order as questions
+    const { answers } = req.body; // Array of selected answer strings
+    const userId = req.user.id || req.user.userId;
 
     const quiz = await Quiz.findById(req.params.id);
 
@@ -171,38 +172,69 @@ router.post('/:id/submit', authenticateToken, async (req, res) => {
       return res.status(404).json({ message: 'Quiz not found' });
     }
 
-    // Check if the quiz belongs to a course owned by the user
-    const course = await Course.findOne({
-      _id: quiz.courseId,
-      userId: req.user.userId
-    });
-
-    if (!course) {
-      return res.status(404).json({ message: 'Quiz not found' });
-    }
+    // Check if user already completed this quiz
+    const alreadyCompleted = quiz.attempts.some(
+      attempt => attempt.userId.toString() === userId.toString()
+    );
 
     // Check answers
     let correctAnswers = 0;
     const questionCount = quiz.questions.length;
+    const detailedResults = [];
 
     if (answers.length !== questionCount) {
       return res.status(400).json({ message: 'Number of answers does not match number of questions' });
     }
 
     for (let i = 0; i < questionCount; i++) {
-      if (answers[i] && quiz.questions[i].answer.toLowerCase().trim() === answers[i].toLowerCase().trim()) {
+      const isCorrect = answers[i] && 
+        quiz.questions[i].correctAnswer.toLowerCase().trim() === answers[i].toLowerCase().trim();
+      
+      if (isCorrect) {
         correctAnswers++;
+      }
+
+      detailedResults.push({
+        questionIndex: i,
+        selectedAnswer: answers[i],
+        isCorrect,
+      });
+    }
+
+    const percentageScore = Math.round((correctAnswers / questionCount) * 100);
+    
+    // Save attempt
+    quiz.attempts.push({
+      userId,
+      score: percentageScore,
+      totalQuestions: questionCount,
+      answers: detailedResults,
+      completedAt: new Date()
+    });
+    
+    await quiz.save();
+
+    // Award points only if first completion (20 points)
+    let pointsAwarded = 0;
+    if (!alreadyCompleted) {
+      const User = (await import('../models/User.js')).default;
+      const user = await User.findById(userId);
+      if (user) {
+        user.totalPoints += 20;
+        await user.save();
+        pointsAwarded = 20;
       }
     }
 
-    const score = Math.round((correctAnswers / questionCount) * 100); // Percentage score
-
     res.json({
       message: 'Quiz submitted successfully',
-      score: score,
+      score: percentageScore,
       correctAnswers,
       totalQuestions: questionCount,
-      percentage: Math.round((correctAnswers / questionCount) * 100)
+      percentage: percentageScore,
+      pointsAwarded,
+      alreadyCompleted: alreadyCompleted,
+      results: detailedResults
     });
   } catch (error) {
     res.status(500).json({ message: error.message });

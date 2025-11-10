@@ -11,15 +11,19 @@ import {
   FaQuestionCircle,
   FaChevronDown,
   FaChevronUp,
+  FaYoutube,
+  FaCheck,
+  FaStar,
 } from "react-icons/fa";
 import toast from "react-hot-toast";
 import { AuthContext } from "../context/AuthContext";
 import API_BASE_URL from "../config";
+import QuizTaker from "../components/QuizTaker";
 
 export default function CourseDetails() {
   const { courseId } = useParams();
   const navigate = useNavigate();
-  const { token } = useContext(AuthContext);
+  const { token, refreshUser } = useContext(AuthContext);
 
   const [loading, setLoading] = useState(true);
   const [course, setCourse] = useState(null);
@@ -27,6 +31,8 @@ export default function CourseDetails() {
   const [quiz, setQuiz] = useState(null);
   const [expandedLesson, setExpandedLesson] = useState(null);
   const [showQuiz, setShowQuiz] = useState(false);
+  const [takingQuiz, setTakingQuiz] = useState(false);
+  const [completedLessons, setCompletedLessons] = useState([]);
 
   useEffect(() => {
     fetchCourseDetails();
@@ -35,12 +41,13 @@ export default function CourseDetails() {
   const fetchCourseDetails = async () => {
     try {
       setLoading(true);
+      const authToken = localStorage.getItem('token');
 
       // Fetch course details
       const courseResponse = await axios.get(
         `${API_BASE_URL}/api/courses/${courseId}`,
         {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: { Authorization: `Bearer ${authToken}` },
         }
       );
 
@@ -48,7 +55,7 @@ export default function CourseDetails() {
       const lessonsResponse = await axios.get(
         `${API_BASE_URL}/api/lessons/course/${courseId}`,
         {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: { Authorization: `Bearer ${authToken}` },
         }
       );
 
@@ -56,13 +63,19 @@ export default function CourseDetails() {
       const quizResponse = await axios.get(
         `${API_BASE_URL}/api/quizzes/course/${courseId}`,
         {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: { Authorization: `Bearer ${authToken}` },
         }
       );
 
       setCourse(courseResponse.data);
       setLessons(lessonsResponse.data);
-      setQuiz(quizResponse.data);
+      setQuiz(quizResponse.data[0]); // Get first quiz
+      
+      // Set completed lessons
+      const completed = lessonsResponse.data
+        .filter(lesson => lesson.completed)
+        .map(lesson => lesson._id);
+      setCompletedLessons(completed);
     } catch (error) {
       console.error("Error fetching course details:", error);
       toast.error("Failed to load course details");
@@ -70,6 +83,58 @@ export default function CourseDetails() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleLessonComplete = async (lessonId) => {
+    try {
+      const authToken = localStorage.getItem('token');
+      const response = await axios.patch(
+        `${API_BASE_URL}/api/lessons/${lessonId}/complete`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${authToken}` },
+        }
+      );
+
+      // Add to completed lessons
+      if (!completedLessons.includes(lessonId)) {
+        setCompletedLessons([...completedLessons, lessonId]);
+        
+        if (response.data.pointsAwarded > 0) {
+          toast.success(`Lesson completed! You earned ${response.data.pointsAwarded} points! `);
+        } else {
+          toast.success("Lesson marked as complete!");
+        }
+        
+        // Refresh course to update progress
+        await fetchCourseDetails();
+        
+        // Refresh user data in context to update points everywhere
+        if (refreshUser) {
+          await refreshUser();
+        }
+      }
+    } catch (error) {
+      console.error("Error completing lesson:", error);
+      toast.error(error.response?.data?.message || "Failed to mark lesson as complete");
+    }
+  };
+
+  const getYouTubeEmbedUrl = (searchTerm) => {
+    // Create a YouTube search URL
+    return `https://www.youtube.com/results?search_query=${encodeURIComponent(searchTerm)}`;
+  };
+
+  const handleQuizComplete = async (results) => {
+    // Refresh course data to get updated points
+    await fetchCourseDetails();
+    
+    // Refresh user data in context to update points everywhere
+    if (refreshUser) {
+      await refreshUser();
+    }
+    
+    toast.success(`Quiz completed with ${results.percentage}% score!`);
   };
 
   const toggleLesson = (lessonId) => {
@@ -204,20 +269,28 @@ export default function CourseDetails() {
                   onClick={() => toggleLesson(lesson._id)}
                   className="w-full p-6 flex items-center justify-between hover:bg-slate-750 transition"
                 >
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-4 flex-1">
                     <div className="w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center font-bold">
                       {index + 1}
                     </div>
-                    <div className="text-left">
-                      <h3 className="text-xl font-semibold">{lesson.title}</h3>
+                    <div className="text-left flex-1">
+                      <div className="flex items-center gap-3">
+                        <h3 className="text-xl font-semibold">{lesson.title}</h3>
+                        {completedLessons.includes(lesson._id) && (
+                          <span className="flex items-center gap-1 text-green-400 text-sm font-semibold bg-green-900/30 px-3 py-1 rounded-full">
+                            <FaCheckCircle />
+                            Completed
+                          </span>
+                        )}
+                      </div>
                       <div className="flex items-center gap-4 mt-1 text-sm text-gray-400">
                         <span className="flex items-center gap-1">
                           <FaClock />
                           {lesson.duration || "30 mins"}
                         </span>
-                        <span className="flex items-center gap-1">
-                          <FaGraduationCap />
-                          {lesson.points} points
+                        <span className="flex items-center gap-1 text-yellow-400">
+                          <FaStar />
+                          5 points
                         </span>
                       </div>
                     </div>
@@ -232,10 +305,53 @@ export default function CourseDetails() {
                 {/* Lesson Content */}
                 {expandedLesson === lesson._id && (
                   <div className="p-6 pt-0 border-t border-slate-700">
-                    <div className="prose prose-invert max-w-none">
-                      <p className="text-gray-300 whitespace-pre-wrap leading-relaxed">
-                        {lesson.content}
+                    {/* YouTube Video Link */}
+                    {lesson.videoSearchTerm && (
+                      <div className="mb-6 bg-slate-900/50 rounded-lg p-4 border border-slate-600">
+                        <div className="flex items-center gap-3 mb-3">
+                          <FaYoutube className="text-red-500 text-2xl" />
+                          <h4 className="text-lg font-semibold text-white">Watch Tutorial</h4>
+                        </div>
+                        <a
+                          href={getYouTubeEmbedUrl(lesson.videoSearchTerm)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition"
+                        >
+                          <FaYoutube />
+                          Search: {lesson.videoSearchTerm}
+                        </a>
+                      </div>
+                    )}
+
+                    {/* Lesson Content */}
+                    <div className="max-w-none mb-6 bg-slate-900/30 rounded-lg p-6 border border-slate-700">
+                      <div 
+                        className="lesson-content"
+                        dangerouslySetInnerHTML={{ 
+                          __html: lesson.content.includes('<') 
+                            ? lesson.content 
+                            : `<p>${lesson.content.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>')}</p>`
+                        }}
+                      />
+                    </div>
+
+                    {/* Complete Lesson Button */}
+                    <div className="flex justify-between items-center pt-4 border-t border-slate-600">
+                      <p className="text-sm text-gray-400">
+                        {completedLessons.includes(lesson._id) 
+                          ? "Great job! You've completed this lesson." 
+                          : "Finished reading? Mark this lesson as complete to track your progress."}
                       </p>
+                      {!completedLessons.includes(lesson._id) && (
+                        <button
+                          onClick={() => handleLessonComplete(lesson._id)}
+                          className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-lg font-semibold transition-all transform hover:scale-105 shadow-lg"
+                        >
+                          <FaCheck />
+                          Mark Complete
+                        </button>
+                      )}
                     </div>
                   </div>
                 )}
@@ -247,43 +363,43 @@ export default function CourseDetails() {
         {/* Quiz Section */}
         {quiz && (
           <div className="bg-slate-800 rounded-2xl p-8 border border-slate-700">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h2 className="text-3xl font-bold flex items-center gap-3 mb-2">
-                  <FaQuestionCircle className="text-purple-400" />
-                  {quiz.title}
-                </h2>
-                <p className="text-gray-400">{quiz.description}</p>
-                <p className="text-indigo-400 mt-2">
-                  Total Score: {quiz.score} points
-                </p>
-              </div>
-              <button
-                onClick={() => setShowQuiz(!showQuiz)}
-                className="px-6 py-3 bg-purple-600 hover:bg-purple-700 rounded-lg font-semibold transition"
-              >
-                {showQuiz ? "Hide Quiz" : "View Quiz"}
-              </button>
-            </div>
-
-            {showQuiz && (
-              <div className="space-y-6 mt-6">
-                {quiz.questions.map((question, index) => (
-                  <div
-                    key={index}
-                    className="bg-slate-900 rounded-lg p-6 border border-slate-700"
-                  >
-                    <h4 className="text-lg font-semibold mb-3">
-                      {index + 1}. {question.ques}
-                    </h4>
-                    <div className="bg-green-900/20 border border-green-500/30 rounded-lg p-4">
-                      <p className="text-sm text-green-300 font-medium mb-1">
-                        ✓ Answer:
+            {!takingQuiz ? (
+              <>
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h2 className="text-3xl font-bold flex items-center gap-3 mb-2">
+                      <FaQuestionCircle className="text-purple-400" />
+                      {quiz.title}
+                    </h2>
+                    <p className="text-gray-400">{quiz.description}</p>
+                    <div className="flex items-center gap-4 mt-3">
+                      <p className="text-indigo-400">
+                        <strong>Questions:</strong> {quiz.questions.length}
                       </p>
-                      <p className="text-gray-300">{question.answer}</p>
+                      <p className="text-green-400">
+                        <strong>Reward:</strong> 20 Learning Points
+                      </p>
                     </div>
                   </div>
-                ))}
+                </div>
+
+                <button
+                  onClick={() => setTakingQuiz(true)}
+                  className="w-full py-4 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 rounded-lg font-semibold text-lg transition-all transform hover:scale-[1.02]"
+                >
+                  Take Quiz
+                </button>
+              </>
+            ) : (
+              <div>
+                <button
+                  onClick={() => setTakingQuiz(false)}
+                  className="flex items-center gap-2 text-gray-400 hover:text-white mb-6 transition"
+                >
+                  <FaArrowLeft />
+                  Back to Course
+                </button>
+                <QuizTaker quiz={quiz} onComplete={handleQuizComplete} />
               </div>
             )}
           </div>

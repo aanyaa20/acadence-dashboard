@@ -8,7 +8,6 @@ import {
   HiBookOpen,
   HiChartBar,
   HiCog,
-  HiCreditCard,
   HiLogout,
 } from "react-icons/hi";
 
@@ -22,7 +21,7 @@ export default function DashboardLayout() {
     { to: "/dashboard/allcourses", label: "All Courses", icon: <HiBookOpen /> },
     { to: "/dashboard/progress", label: "Progress", icon: <HiChartBar /> },
     { to: "/dashboard/settings", label: "Settings", icon: <HiCog /> },
-    { to: "/dashboard/payments", label: "Payments", icon: <HiCreditCard /> },
+    
   ];
 
   function signOut() {
@@ -32,28 +31,48 @@ export default function DashboardLayout() {
   }
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-slate-900 via-indigo-900 to-blue-900 text-white">
+    <div className="flex min-h-screen" style={{ backgroundColor: 'var(--color-bg-secondary)' }}>
       {/* Sidebar */}
       <aside
         className={`flex flex-col transition-all duration-300 ${
           open ? "w-64" : "w-20"
-        } bg-gradient-to-b from-indigo-800 to-blue-900 shadow-xl`}
+        } border-r`}
+        style={{
+          backgroundColor: 'var(--color-bg-primary)',
+          borderColor: 'var(--color-border-light)',
+          color: 'var(--color-text-primary)'
+        }}
       >
         {/* header: logo + toggle */}
-        <div className="flex items-center justify-between p-4 border-b border-white/10">
+        <div className="flex items-center justify-between p-4 border-b" style={{ borderColor: 'var(--color-border-light)' }}>
           <div className="flex items-center gap-2">
-            <div className="rounded-md w-10 h-10 bg-indigo-700 flex items-center justify-center font-bold text-lg">
+            <div className="rounded-lg w-10 h-10 flex items-center justify-center font-bold text-lg shadow-custom-md" style={{
+              background: 'var(--gradient-primary)',
+              color: 'var(--color-text-inverse)'
+            }}>
               A
             </div>
-            {open}
+            {open && (
+              <span className="font-bold text-lg" style={{ 
+                background: 'var(--gradient-primary)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text'
+              }}>
+                Acadence
+              </span>
+            )}
           </div>
 
           <button
             onClick={() => setOpen((s) => !s)}
-            className="p-2 rounded-md bg-white/10 hover:bg-white/20"
+            className="p-2 rounded-md transition-all"
+            style={{ backgroundColor: 'var(--color-bg-tertiary)' }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--color-primary-light)'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--color-bg-tertiary)'}
             aria-label="toggle sidebar"
           >
-            <HiMenuAlt2 className="text-lg" />
+            <HiMenuAlt2 className="text-lg" style={{ color: 'var(--color-text-secondary)' }} />
           </button>
         </div>
 
@@ -63,24 +82,49 @@ export default function DashboardLayout() {
             <NavLink
               key={m.to}
               to={m.to}
-              className={({ isActive }) =>
-                `flex items-center gap-3 p-3 rounded-lg transition-colors hover:bg-white/5 ${
-                  isActive ? "bg-white/10 ring-1 ring-white/10" : ""
-                }`
-              }
               end={m.to === "/dashboard"}
             >
-              <div className="text-xl">{m.icon}</div>
-              {open && <span>{m.label}</span>}
+              {({ isActive }) => (
+                <div
+                  className="flex items-center gap-3 p-3 rounded-lg transition-all"
+                  style={{
+                    backgroundColor: isActive ? 'var(--color-primary)' : 'transparent',
+                    color: isActive ? 'var(--color-text-inverse)' : 'var(--color-text-secondary)',
+                    boxShadow: isActive ? 'var(--shadow-sm)' : 'none'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isActive) {
+                      e.currentTarget.style.backgroundColor = 'var(--color-bg-tertiary)';
+                      e.currentTarget.style.color = 'var(--color-text-primary)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isActive) {
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                      e.currentTarget.style.color = 'var(--color-text-secondary)';
+                    }
+                  }}
+                >
+                  <div className="text-xl">{m.icon}</div>
+                  {open && <span className="font-medium">{m.label}</span>}
+                </div>
+              )}
             </NavLink>
           ))}
         </nav>
 
         {/* bottom actions */}
-        <div className="p-4 border-t border-white/10">
+        <div className="p-4 border-t" style={{ borderColor: 'var(--color-border-light)' }}>
           <button
             onClick={signOut}
-            className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 text-left"
+            className="w-full flex items-center gap-3 p-3 rounded-lg text-left transition-all font-medium"
+            style={{ color: 'var(--color-error)' }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'var(--color-error-light)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent';
+            }}
           >
             <HiLogout className="text-xl" />
             {open && <span>Logout</span>}
@@ -89,7 +133,7 @@ export default function DashboardLayout() {
       </aside>
 
       {/* Main content */}
-      <main className="flex-1">
+      <main className="flex-1" style={{ backgroundColor: 'var(--color-bg-secondary)' }}>
         <div className="p-8 pt-24">
           <Outlet />
         </div>

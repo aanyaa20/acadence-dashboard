@@ -175,39 +175,53 @@ router.delete('/:id', authenticateToken, async (req, res) => {
 // Mark lesson as completed
 router.patch('/:id/complete', authenticateToken, async (req, res) => {
   try {
+    const userId = req.user.id || req.user.userId;
     const lesson = await Lesson.findById(req.params.id);
 
     if (!lesson) {
       return res.status(404).json({ message: 'Lesson not found' });
     }
 
-    // Check if the lesson belongs to a course owned by the user
-    const course = await Course.findOne({
-      _id: lesson.courseId,
-      userId: req.user.userId
-    });
+    // Check if user already completed this lesson
+    const alreadyCompleted = lesson.completedBy.some(
+      id => id.toString() === userId.toString()
+    );
 
-    if (!course) {
-      return res.status(404).json({ message: 'Lesson not found' });
-    }
+    let pointsAwarded = 0;
 
-    // Update lesson completion status
-    lesson.completed = true;
-    await lesson.save();
+    if (!alreadyCompleted) {
+      // Add user to completedBy array
+      lesson.completedBy.push(userId);
+      
+      // Mark as completed if not already
+      lesson.completed = true;
+      await lesson.save();
 
-    // Update course completion stats
-    if (!course.completedLessons) {
-      course.completedLessons = 0;
-    }
-    
-    if (!lesson.completed) { // If it wasn't already completed
-      course.completedLessons += 1;
-      await course.save();
+      // Update course completion stats
+      const course = await Course.findById(lesson.courseId);
+      if (course) {
+        if (!course.completedLessons) {
+          course.completedLessons = 0;
+        }
+        course.completedLessons += 1;
+        await course.save();
+      }
+
+      // Award points to user (5 points per lesson)
+      const User = (await import('../models/User.js')).default;
+      const user = await User.findById(userId);
+      if (user) {
+        user.totalPoints += 5;
+        await user.save();
+        pointsAwarded = 5;
+      }
     }
 
     res.json({
-      message: 'Lesson marked as completed',
-      lesson
+      message: alreadyCompleted ? 'Lesson already completed' : 'Lesson marked as completed',
+      lesson,
+      alreadyCompleted,
+      pointsAwarded
     });
   } catch (error) {
     res.status(500).json({ message: error.message });

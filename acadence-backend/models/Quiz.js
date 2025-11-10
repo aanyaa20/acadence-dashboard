@@ -20,15 +20,38 @@ const quizSchema = new mongoose.Schema({
       type: String,
       required: true
     },
-    answer: {
+    options: [{
+      type: String
+    }],
+    correctAnswer: {
       type: String,
       required: true
+    },
+    explanation: {
+      type: String
     }
-  }], // Array of question objects
+  }],
   score: {
     type: Number,
-    required: true // Key score for the quiz
-  }
+    required: true
+  },
+  attempts: [{
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    score: Number,
+    totalQuestions: Number,
+    answers: [{
+      questionIndex: Number,
+      selectedAnswer: String,
+      isCorrect: Boolean
+    }],
+    completedAt: {
+      type: Date,
+      default: Date.now
+    }
+  }]
 }, {
   timestamps: true // This adds createdAt and updatedAt automatically
 });

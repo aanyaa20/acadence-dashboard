@@ -4,124 +4,219 @@ import Course from "../models/Course.js";
 import Lesson from "../models/Lesson.js";
 import Quiz from "../models/Quiz.js";
 import { authenticateToken } from "../middleware/auth.js";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const router = express.Router();
 
-// Detailed prompt template for course generation
+// Helper to log to file
+function logToFile(message) {
+  const logPath = path.join(__dirname, "..", "debug.log");
+  const timestamp = new Date().toISOString();
+  fs.appendFileSync(logPath, `[${timestamp}] ${message}\n`);
+}
+
+// Detailed prompt template for comprehensive course generation
 const createCoursePrompt = (topic, difficulty, numberOfLessons) => {
-  return `You are an expert educational content creator. Generate a comprehensive course on the topic: "${topic}" with difficulty level: "${difficulty}".
+  return `Generate a COMPREHENSIVE and DETAILED course on "${topic}" (${difficulty} level).
 
-CRITICAL INSTRUCTIONS:
-1. You MUST respond ONLY with valid JSON. No additional text, explanation, or markdown formatting.
-2. The JSON must be parseable and follow the exact structure specified below.
-3. Generate exactly ${numberOfLessons} lessons for this course.
-4. Each lesson should have substantial educational content (minimum 300 words).
-5. Create exactly 1 quiz with 5 questions related to the entire course content.
+CRITICAL RULES:
+1. Respond with ONLY valid JSON - no markdown, no code blocks, no extra text
+2. Make content DETAILED and educational
+3. Each lesson: 500-800 words with thorough explanations, examples, and code snippets
+4. Include relevant YouTube search terms for each lesson
+5. Description: 150-200 words
+6. Quiz: 5-10 challenging questions with detailed answers
 
-REQUIRED JSON STRUCTURE (respond with ONLY this JSON, nothing else):
+Generate exactly ${numberOfLessons} lessons.
+
+JSON format:
 {
   "course": {
-    "title": "string - The complete course title",
-    "topic": "string - The main topic/subject",
-    "description": "string - A comprehensive course description (100-200 words)",
-    "difficulty": "string - beginner, intermediate, or advanced",
-    "estimatedDuration": "string - Estimated time to complete (e.g., '4 hours', '2 weeks')",
-    "learningObjectives": ["string - objective 1", "string - objective 2", "string - objective 3"]
+    "title": "Course title",
+    "topic": "${topic}",
+    "description": "Comprehensive 150-200 word description covering what students will learn",
+    "difficulty": "${difficulty}",
+    "estimatedDuration": "e.g. 4-6 hours",
+    "learningObjectives": ["objective 1", "objective 2", "objective 3", "objective 4", "objective 5"]
   },
   "lessons": [
     {
-      "title": "string - Lesson title",
-      "content": "string - Detailed lesson content with explanations, examples, and educational material (minimum 300 words). Use proper formatting with paragraphs.",
-      "order": number - Sequential number starting from 1,
-      "points": number - Points awarded for completing this lesson (10-50),
-      "duration": "string - Estimated time (e.g., '30 minutes')"
+      "title": "Lesson title",
+      "content": "DETAILED 500-800 word lesson content with thorough explanations, real-world examples, code snippets (if applicable), best practices, and practical tips. Include headings, bullet points, and structured content.",
+      "order": 1,
+      "points": 20,
+      "duration": "30-45 minutes",
+      "videoSearchTerm": "Relevant YouTube search term for this lesson"
     }
   ],
   "quiz": {
-    "title": "string - Quiz title for the entire course",
-    "description": "string - Brief description of what the quiz covers",
+    "title": "Quiz title",
+    "description": "What the quiz covers",
     "questions": [
       {
-        "ques": "string - The question text",
-        "answer": "string - The correct answer with brief explanation"
+        "ques": "Detailed question text testing understanding?",
+        "options": ["Option A", "Option B", "Option C", "Option D"],
+        "correctAnswer": "Option B",
+        "explanation": "Why this answer is correct (2-3 sentences)"
       }
     ],
-    "score": number - Total points for the quiz (50-100)
+    "score": 50
   }
 }
 
-IMPORTANT VALIDATION RULES:
-- All lessons must be in the "lessons" array (exactly ${numberOfLessons} lessons)
-- Quiz must contain exactly 5 questions
-- All string fields must be non-empty
-- All content must be educational and professional
-- Lesson content must be comprehensive and detailed
-- Questions should test understanding of the course material
-- Answers should include brief explanations
+- Include 5-10 challenging quiz questions with 4 options each
+- Make content DETAILED and comprehensive
+- Include practical examples and explanations
+- Provide video search terms for multimedia learning
 
-Generate the course now. Remember: ONLY output the JSON structure, nothing else.`;
+Generate now. Return ONLY the JSON object.`;
 };
 
 // POST /api/generate-course - Generate a new course using Gemini AI
 router.post("/", authenticateToken, async (req, res) => {
+  const separator = "\n" + "=".repeat(80);
+  console.log(separator);
+  console.log("🔥 GENERATE COURSE REQUEST RECEIVED");
+  console.log("=".repeat(80));
+  
+  logToFile(separator);
+  logToFile("🔥 GENERATE COURSE REQUEST RECEIVED");
+  logToFile("=".repeat(80));
+  
   try {
+    console.log("Request Body:", JSON.stringify(req.body, null, 2));
+    console.log("User from token:", JSON.stringify(req.user, null, 2));
+    
+    logToFile("Request Body: " + JSON.stringify(req.body, null, 2));
+    logToFile("User from token: " + JSON.stringify(req.user, null, 2));
+    
     const { topic, difficulty = "beginner", numberOfLessons = 5 } = req.body;
-    const userId = req.user.id;
+    const userId = req.user.id || req.user.userId;
+
+    console.log("Extracted userId:", userId);
 
     // Validate input
     if (!topic || topic.trim() === "") {
+      console.log("❌ Validation failed: topic is required");
       return res.status(400).json({ error: "Course topic is required" });
     }
 
-    if (numberOfLessons < 3 || numberOfLessons > 15) {
+    if (numberOfLessons < 3 || numberOfLessons > 10) {
+      console.log("❌ Validation failed: invalid number of lessons");
       return res.status(400).json({ 
-        error: "Number of lessons must be between 3 and 15" 
+        error: "Number of lessons must be between 3 and 10" 
       });
     }
 
     const validDifficulties = ["beginner", "intermediate", "advanced"];
     if (!validDifficulties.includes(difficulty.toLowerCase())) {
+      console.log("❌ Validation failed: invalid difficulty");
       return res.status(400).json({ 
         error: "Difficulty must be: beginner, intermediate, or advanced" 
       });
     }
 
-    console.log(`📚 Generating course: ${topic} (${difficulty}) with ${numberOfLessons} lessons...`);
+    console.log(`📚 Generating course: ${topic} (${difficulty}) with ${numberOfLessons} lessons for user ${userId}...`);
 
     // Get Gemini model
+    console.log("🤖 Getting Gemini model...");
     const model = getCourseGenerationModel();
 
     // Generate course content
+    console.log("📝 Sending prompt to Gemini...");
     const prompt = createCoursePrompt(topic, difficulty, numberOfLessons);
-    const result = await model.generateContent(prompt);
+    
+    let result;
+    try {
+      result = await model.generateContent(prompt);
+      console.log("✅ Gemini API response received");
+    } catch (geminiError) {
+      console.error("❌ Gemini API Error:", geminiError);
+      console.error("Error details:", JSON.stringify(geminiError, null, 2));
+      return res.status(500).json({ 
+        error: "Failed to generate course content from AI",
+        details: geminiError.message 
+      });
+    }
+
     const responseText = result.response.text();
+    console.log("📄 Response text length:", responseText.length);
+    console.log("First 500 chars:", responseText.substring(0, 500));
+    console.log("Last 500 chars:", responseText.substring(responseText.length - 500));
+    
+    logToFile("Response length: " + responseText.length);
+    logToFile("First 1000 chars: " + responseText.substring(0, 1000));
+    logToFile("Last 500 chars: " + responseText.substring(responseText.length - 500));
 
     // Parse JSON response
     let courseData;
     try {
-      // Remove markdown code blocks if present
-      const cleanedResponse = responseText
-        .replace(/```json\s*/g, "")
-        .replace(/```\s*/g, "")
-        .trim();
+      // More aggressive cleaning of markdown and extra text
+      let cleanedResponse = responseText.trim();
+      
+      // Remove markdown code blocks
+      cleanedResponse = cleanedResponse.replace(/```json\s*/gi, "");
+      cleanedResponse = cleanedResponse.replace(/```\s*/g, "");
+      
+      // Find the first { and last }
+      const firstBrace = cleanedResponse.indexOf('{');
+      const lastBrace = cleanedResponse.lastIndexOf('}');
+      
+      if (firstBrace === -1 || lastBrace === -1) {
+        throw new Error("No valid JSON found in response");
+      }
+      
+      cleanedResponse = cleanedResponse.substring(firstBrace, lastBrace + 1);
+      
+      console.log("🧹 Cleaned response length:", cleanedResponse.length);
+      console.log("🧹 First 300 chars:", cleanedResponse.substring(0, 300));
+      
+      logToFile("Cleaned response length: " + cleanedResponse.length);
       
       courseData = JSON.parse(cleanedResponse);
+      console.log("✅ JSON parsed successfully");
+      logToFile("✅ JSON parsed successfully");
     } catch (parseError) {
-      console.error("❌ Failed to parse Gemini response:", responseText);
+      console.error("❌ Failed to parse Gemini response");
+      console.error("Parse error:", parseError.message);
+      console.error("Parse error position:", parseError.message.match(/position (\d+)/)?.[1]);
+      
+      logToFile("❌ Parse error: " + parseError.message);
+      logToFile("Full response: " + responseText);
+      
       return res.status(500).json({ 
         error: "Failed to parse AI response. Please try again.",
-        details: parseError.message 
+        details: parseError.message,
+        responsePreview: responseText.substring(0, 200)
       });
     }
 
     // Validate the structure
+    console.log("🔍 Validating course structure...");
+    console.log("courseData keys:", Object.keys(courseData));
+    
     if (!courseData.course || !courseData.lessons || !courseData.quiz) {
+      console.error("❌ Invalid structure. Has course?", !!courseData.course, "Has lessons?", !!courseData.lessons, "Has quiz?", !!courseData.quiz);
       return res.status(500).json({ 
-        error: "Invalid course structure generated. Please try again." 
+        error: "Invalid course structure generated. Please try again.",
+        structure: {
+          hasCourse: !!courseData.course,
+          hasLessons: !!courseData.lessons,
+          hasQuiz: !!courseData.quiz
+        }
       });
     }
 
+    console.log("✅ Structure validated");
+    console.log("Course data:", JSON.stringify(courseData.course, null, 2));
+
     // Create the course in the database
+    console.log("💾 Creating course in database...");
     const course = new Course({
       userId,
       title: courseData.course.title,
@@ -134,11 +229,18 @@ router.post("/", authenticateToken, async (req, res) => {
       completedLessons: 0,
     });
 
-    await course.save();
-    console.log(`✅ Course created: ${course._id}`);
+    try {
+      await course.save();
+      console.log(`✅ Course created: ${course._id}`);
+    } catch (dbError) {
+      console.error("❌ Database error saving course:", dbError);
+      throw dbError;
+    }
 
     // Create lessons
+    console.log(`💾 Creating ${courseData.lessons.length} lessons...`);
     const lessonPromises = courseData.lessons.map((lessonData, index) => {
+      console.log(`  - Lesson ${index + 1}: ${lessonData.title}`);
       const lesson = new Lesson({
         courseId: course._id,
         title: lessonData.title,
@@ -146,30 +248,50 @@ router.post("/", authenticateToken, async (req, res) => {
         order: lessonData.order || index + 1,
         points: lessonData.points || 10,
         duration: lessonData.duration,
+        videoSearchTerm: lessonData.videoSearchTerm,
         completed: false,
+        completedBy: [],
       });
       return lesson.save();
     });
 
-    const savedLessons = await Promise.all(lessonPromises);
-    console.log(`✅ ${savedLessons.length} lessons created`);
+    let savedLessons;
+    try {
+      savedLessons = await Promise.all(lessonPromises);
+      console.log(`✅ ${savedLessons.length} lessons created`);
+    } catch (lessonError) {
+      console.error("❌ Error saving lessons:", lessonError);
+      throw lessonError;
+    }
 
     // Create quiz
+    console.log("💾 Creating quiz...");
+    console.log("Quiz data:", JSON.stringify(courseData.quiz, null, 2));
+    
     const quiz = new Quiz({
       courseId: course._id,
       title: courseData.quiz.title,
       description: courseData.quiz.description,
       questions: courseData.quiz.questions.map((q) => ({
         ques: q.ques,
-        answer: q.answer,
+        options: q.options || [],
+        correctAnswer: q.correctAnswer || q.answer,
+        explanation: q.explanation || '',
       })),
       score: courseData.quiz.score || 100,
+      attempts: [],
     });
 
-    await quiz.save();
-    console.log(`✅ Quiz created: ${quiz._id}`);
+    try {
+      await quiz.save();
+      console.log(`✅ Quiz created: ${quiz._id}`);
+    } catch (quizError) {
+      console.error("❌ Error saving quiz:", quizError);
+      throw quizError;
+    }
 
     // Return the complete course data
+    console.log("🎉 Course generation complete!");
     res.status(201).json({
       message: "Course generated successfully",
       course: {
@@ -182,9 +304,18 @@ router.post("/", authenticateToken, async (req, res) => {
     });
   } catch (error) {
     console.error("❌ Error generating course:", error);
+    console.error("Error stack:", error.stack);
+    console.error("Error name:", error.name);
+    console.error("Error details:", JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
+    
+    logToFile("❌ ERROR: " + error.message);
+    logToFile("Stack: " + error.stack);
+    logToFile("Name: " + error.name);
+    
     res.status(500).json({ 
       error: "Failed to generate course",
-      details: error.message 
+      details: error.message,
+      errorType: error.name
     });
   }
 });

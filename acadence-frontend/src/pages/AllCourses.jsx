@@ -142,7 +142,49 @@ export default function Courses() {
 
   const handleGenerateCourse = async (formData) => {
     setIsGenerating(true);
+    console.log("🚀 Starting course generation...");
+    console.log("Form data:", formData);
+    
+    // Get token from localStorage directly
+    const authToken = localStorage.getItem('token');
+    console.log("Token from localStorage:", authToken ? "Present" : "Missing");
+    console.log("Token preview:", authToken ? authToken.substring(0, 20) + "..." : "null");
+    console.log("Token from context:", token ? "Present" : "Missing");
+    
+    // Check if user is logged in
+    const user = localStorage.getItem('user');
+    console.log("User from localStorage:", user ? "Present" : "Missing");
+    
+    if (!authToken) {
+      toast.error("Please login to generate courses");
+      setIsGenerating(false);
+      navigate('/login');
+      return;
+    }
+    
+    // Try to decode the JWT to check if it's valid
     try {
+      const payload = JSON.parse(atob(authToken.split('.')[1]));
+      console.log("Token payload:", payload);
+      console.log("Token expiry:", new Date(payload.exp * 1000));
+      console.log("Current time:", new Date());
+      
+      if (payload.exp * 1000 < Date.now()) {
+        toast.error("Your session has expired. Please login again.");
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        navigate('/login');
+        return;
+      }
+    } catch (err) {
+      console.error("Error parsing token:", err);
+      toast.error("Invalid token. Please login again.");
+      navigate('/login');
+      return;
+    }
+    
+    try {
+      console.log("📡 Sending request to:", `${API_BASE_URL}/api/generate-course`);
       const response = await axios.post(
         `${API_BASE_URL}/api/generate-course`,
         {
@@ -152,23 +194,56 @@ export default function Courses() {
         },
         {
           headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${authToken}`,
             "Content-Type": "application/json",
           },
         }
       );
 
-      toast.success("Course generated successfully! 🎉");
+      console.log("✅ Course generated successfully!");
+      console.log("Response:", response.data);
+      
+      toast.success("Course generated successfully!");
       setIsDialogOpen(false);
       
       // Navigate to the generated course details page
       const courseId = response.data.course._id;
+      console.log("Navigating to course:", courseId);
       navigate(`/course/${courseId}`);
     } catch (error) {
-      console.error("Error generating course:", error);
-      toast.error(
-        error.response?.data?.error || "Failed to generate course. Please try again."
-      );
+      console.error("❌ Error generating course:", error);
+      console.error("Error response:", error.response?.data);
+      console.error("Full error response object:", JSON.stringify(error.response?.data, null, 2));
+      console.error("Error status:", error.response?.status);
+      console.error("Error message:", error.message);
+      
+      // Handle authentication errors
+      if (error.response?.status === 403 || error.response?.status === 401) {
+        toast.error("Your session has expired. Please login again.");
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        setTimeout(() => {
+          navigate('/login');
+        }, 2000);
+        return;
+      }
+      
+      const errorMessage = error.response?.data?.error 
+        || error.response?.data?.details
+        || error.response?.data?.message
+        || error.message
+        || "Failed to generate course. Please try again.";
+      
+      // Show detailed error in console for debugging
+      if (error.response?.data) {
+        console.error("📋 Detailed error info:");
+        console.error("- Error:", error.response.data.error);
+        console.error("- Details:", error.response.data.details);
+        console.error("- Error Type:", error.response.data.errorType);
+        console.error("- Message:", error.response.data.message);
+      }
+      
+      toast.error(errorMessage);
     } finally {
       setIsGenerating(false);
     }
@@ -192,7 +267,7 @@ export default function Courses() {
           <div>
             <h1 className="text-4xl font-bold mb-2 text-indigo-400">All Courses</h1>
             <p className="text-gray-400">
-              Browse from our top-rated courses and start learning 🚀
+              Browse from our top-rated courses and start learning
             </p>
           </div>
           <button

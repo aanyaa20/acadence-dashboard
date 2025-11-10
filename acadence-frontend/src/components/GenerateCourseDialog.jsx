@@ -29,8 +29,8 @@ export default function GenerateCourseDialog({ isOpen, onClose, onGenerate, isGe
     }
 
     const lessons = parseInt(formData.numberOfLessons);
-    if (lessons < 3 || lessons > 15) {
-      newErrors.numberOfLessons = "Number of lessons must be between 3 and 15";
+    if (lessons < 3 || lessons > 10) {
+      newErrors.numberOfLessons = "Number of lessons must be between 3 and 10";
     }
 
     setErrors(newErrors);
@@ -111,7 +111,7 @@ export default function GenerateCourseDialog({ isOpen, onClose, onGenerate, isGe
           {/* Number of Lessons */}
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">
-              Number of Lessons (3-15)
+              Number of Lessons (3-10)
             </label>
             <input
               type="number"
@@ -119,7 +119,7 @@ export default function GenerateCourseDialog({ isOpen, onClose, onGenerate, isGe
               value={formData.numberOfLessons}
               onChange={handleChange}
               min="3"
-              max="15"
+              max="10"
               disabled={isGenerating}
               className={`w-full px-4 py-3 bg-slate-700 border ${
                 errors.numberOfLessons ? "border-red-500" : "border-slate-600"

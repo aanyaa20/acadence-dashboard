@@ -9,7 +9,8 @@ const router = express.Router();
 // Get all courses for the authenticated user
 router.get('/', authenticateToken, async (req, res) => {
   try {
-    const courses = await Course.find({ userId: req.user.userId })
+    const userId = req.user.id || req.user.userId;
+    const courses = await Course.find({ userId: userId })
       .populate('userId', 'name email')
       .sort({ createdAt: -1 });
 
@@ -22,9 +23,10 @@ router.get('/', authenticateToken, async (req, res) => {
 // Get a specific course
 router.get('/:id', authenticateToken, async (req, res) => {
   try {
+    const userId = req.user.id || req.user.userId;
     const course = await Course.findOne({
       _id: req.params.id,
-      userId: req.user.userId
+      userId: userId
     }).populate('userId', 'name email');
 
     if (!course) {
@@ -41,9 +43,10 @@ router.get('/:id', authenticateToken, async (req, res) => {
 router.post('/', authenticateToken, async (req, res) => {
   try {
     const { title, topic, description } = req.body;
+    const userId = req.user.id || req.user.userId;
 
     const course = new Course({
-      userId: req.user.userId,
+      userId: userId,
       title,
       topic,
       description
@@ -64,9 +67,10 @@ router.post('/', authenticateToken, async (req, res) => {
 router.put('/:id', authenticateToken, async (req, res) => {
   try {
     const { title, topic, description } = req.body;
+    const userId = req.user.id || req.user.userId;
 
     const updatedCourse = await Course.findOneAndUpdate(
-      { _id: req.params.id, userId: req.user.userId },
+      { _id: req.params.id, userId: userId },
       { title, topic, description },
       { new: true, runValidators: true }
     );
@@ -87,9 +91,10 @@ router.put('/:id', authenticateToken, async (req, res) => {
 // Delete a course and all its associated lessons and quizzes
 router.delete('/:id', authenticateToken, async (req, res) => {
   try {
+    const userId = req.user.id || req.user.userId;
     const course = await Course.findOneAndDelete({
       _id: req.params.id,
-      userId: req.user.userId
+      userId: userId
     });
 
     if (!course) {

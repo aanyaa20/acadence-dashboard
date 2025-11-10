@@ -27,10 +27,18 @@ const lessonSchema = new mongoose.Schema({
     type: Number,
     default: 10
   },
+  videoSearchTerm: {
+    type: String,
+    trim: true
+  },
   completed: {
     type: Boolean,
     default: false
-  }
+  },
+  completedBy: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }]
 }, {
   timestamps: true // This adds createdAt and updatedAt automatically
 });

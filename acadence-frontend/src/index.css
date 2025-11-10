@@ -1,15 +1,411 @@
 @import "tailwindcss";
 
+/* ===== DESIGN SYSTEM - MODERN MINIMAL PALETTE ===== */
+:root {
+  /* Base Colors - Soft Dark Theme (Easy on Eyes) */
+  --color-bg-primary: #1A1D29;        /* Deep navy blue */
+  --color-bg-secondary: #13151F;      /* Darker navy */
+  --color-bg-tertiary: #23263A;       /* Lighter navy panel */
+  --color-bg-elevated: #20233A;       /* Elevated cards */
+  
+  /* Text Colors - Soft & Readable */
+  --color-text-primary: #E8E9F3;      /* Soft white */
+  --color-text-secondary: #B8BACF;    /* Muted lavender gray */
+  --color-text-tertiary: #8B8EA3;     /* Light gray */
+  --color-text-muted: #6B6E84;        /* Very soft gray */
+  --color-text-inverse: #13151F;      /* Dark for light backgrounds */
+  
+  /* Brand Colors - Purple & Cyan (Modern & Vibrant) */
+  --color-primary: #8B5CF6;           /* Vibrant purple */
+  --color-primary-hover: #7C3AED;     /* Deeper purple */
+  --color-primary-light: #2D1B4E;     /* Dark purple tint */
+  --color-primary-dark: #6D28D9;      /* Deep purple */
+  
+  --color-secondary: #06B6D4;         /* Bright cyan */
+  --color-secondary-hover: #0891B2;   /* Deeper cyan */
+  --color-secondary-light: #164E63;   /* Dark cyan tint */
+  --color-secondary-dark: #0E7490;    /* Deep cyan */
+  
+  /* Accent & Status Colors */
+  --color-accent: #A78BFA;            /* Light purple */
+  --color-accent-hover: #8B5CF6;
+  
+  --color-success: #10B981;           /* Fresh green */
+  --color-success-light: #1A3A2E;
+  --color-warning: #F59E0B;           /* Warm amber */
+  --color-warning-light: #3A2817;
+  --color-error: #EF4444;             /* Soft red */
+  --color-error-light: #3A1A1A;
+  --color-info: #3B82F6;              /* Blue */
+  --color-info-light: #1E3A5F;
+  
+  /* Border & Divider Colors - Subtle */
+  --color-border-light: #2D3144;      /* Subtle border */
+  --color-border-medium: #3D4058;     /* Medium border */
+  --color-border-dark: #4D5066;       /* Visible border */
+  
+  /* Shadows - Soft & Deep */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.6), 0 10px 10px -5px rgba(0, 0, 0, 0.4);
+  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+  
+  /* Gradient Colors - Vibrant & Modern */
+  --gradient-primary: linear-gradient(135deg, #8B5CF6 0%, #A78BFA 100%);
+  --gradient-secondary: linear-gradient(135deg, #06B6D4 0%, #8B5CF6 100%);
+  --gradient-soft: linear-gradient(135deg, #23263A 0%, #2D1B4E 100%);
+  --gradient-warm: linear-gradient(135deg, #20233A 0%, #1A1D29 100%);
+  --gradient-vibrant: linear-gradient(135deg, #8B5CF6 0%, #06B6D4 100%);
+  
+  /* Spacing System */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  --spacing-2xl: 3rem;
+  
+  /* Border Radius - Smooth & Modern */
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.25rem;
+  --radius-2xl: 1.75rem;
+  --radius-full: 9999px;
+  
+  /* Typography */
+  --font-family-sans: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  --font-family-mono: 'Fira Code', 'Courier New', monospace;
+}
+
+/* ===== LIGHT MODE THEME ===== */
+[data-theme="light"] {
+  /* Base Colors - Clean Light Theme */
+  --color-bg-primary: #FFFFFF;        /* Pure white */
+  --color-bg-secondary: #F8F9FA;      /* Light gray */
+  --color-bg-tertiary: #F1F3F5;       /* Lighter gray panel */
+  --color-bg-elevated: #FFFFFF;       /* Elevated cards */
+  
+  /* Text Colors */
+  --color-text-primary: #212529;      /* Dark gray */
+  --color-text-secondary: #495057;    /* Medium gray */
+  --color-text-tertiary: #6C757D;     /* Light gray */
+  --color-text-muted: #ADB5BD;        /* Very soft gray */
+  --color-text-inverse: #FFFFFF;      /* White for dark backgrounds */
+  
+  /* Brand Colors remain the same but adjust light versions */
+  --color-primary-light: #EDE9FE;     /* Light purple tint */
+  --color-secondary-light: #CFFAFE;   /* Light cyan tint */
+  
+  /* Status Colors Light */
+  --color-success-light: #D1FAE5;
+  --color-warning-light: #FEF3C7;
+  --color-error-light: #FEE2E2;
+  --color-info-light: #DBEAFE;
+  
+  /* Border & Divider Colors */
+  --color-border-light: #E9ECEF;      /* Subtle border */
+  --color-border-medium: #DEE2E6;     /* Medium border */
+  --color-border-dark: #CED4DA;       /* Visible border */
+  
+  /* Shadows - Lighter */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  
+  /* Gradients for light mode */
+  --gradient-soft: linear-gradient(135deg, #F8F9FA 0%, #EDE9FE 100%);
+  --gradient-warm: linear-gradient(135deg, #FFFFFF 0%, #F8F9FA 100%);
+}
+
+/* ===== TAILWIND CUSTOM UTILITIES ===== */
+@layer utilities {
+  /* Background Colors */
+  .bg-primary { background-color: var(--color-bg-primary); }
+  .bg-secondary { background-color: var(--color-bg-secondary); }
+  .bg-tertiary { background-color: var(--color-bg-tertiary); }
+  .bg-elevated { background-color: var(--color-bg-elevated); }
+  
+  /* Text Colors */
+  .text-primary { color: var(--color-text-primary); }
+  .text-secondary { color: var(--color-text-secondary); }
+  .text-tertiary { color: var(--color-text-tertiary); }
+  .text-muted { color: var(--color-text-muted); }
+  .text-inverse { color: var(--color-text-inverse); }
+  
+  /* Brand Colors */
+  .text-brand { color: var(--color-primary); }
+  .bg-brand { background-color: var(--color-primary); }
+  .bg-brand-hover:hover { background-color: var(--color-primary-hover); }
+  .bg-brand-light { background-color: var(--color-primary-light); }
+  
+  .text-accent { color: var(--color-accent); }
+  .bg-accent { background-color: var(--color-accent); }
+  .bg-accent-hover:hover { background-color: var(--color-accent-hover); }
+  
+  /* Success/Error/Warning */
+  .text-success { color: var(--color-success); }
+  .bg-success { background-color: var(--color-success); }
+  .bg-success-light { background-color: var(--color-success-light); }
+  
+  .text-error { color: var(--color-error); }
+  .bg-error { background-color: var(--color-error); }
+  .bg-error-light { background-color: var(--color-error-light); }
+  
+  .text-warning { color: var(--color-warning); }
+  .bg-warning { background-color: var(--color-warning); }
+  
+  /* Border Colors */
+  .border-light { border-color: var(--color-border-light); }
+  .border-medium { border-color: var(--color-border-medium); }
+  .border-dark { border-color: var(--color-border-dark); }
+  
+  /* Gradients */
+  .gradient-primary { background: var(--gradient-primary); }
+  .gradient-secondary { background: var(--gradient-secondary); }
+  .gradient-soft { background: var(--gradient-soft); }
+  
+  /* Shadow Utilities */
+  .shadow-custom-sm { box-shadow: var(--shadow-sm); }
+  .shadow-custom-md { box-shadow: var(--shadow-md); }
+  .shadow-custom-lg { box-shadow: var(--shadow-lg); }
+  .shadow-custom-xl { box-shadow: var(--shadow-xl); }
+}
+
 body {
-  background-color: #0f172a; /* Tailwind's slate-900 */
-  color: white;
+  background-color: var(--color-bg-secondary);
+  color: var(--color-text-primary);
   -webkit-font-smoothing: antialiased;
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  font-family: var(--font-family-sans);
   overflow-x: hidden;
   margin: 0;
   padding: 0;
 }
+
 html {
   scroll-behavior: smooth;
 }
 
+/* Lesson Content Styling */
+.lesson-content {
+  line-height: 1.8;
+  font-size: 1.0625rem;
+  animation: fadeIn 0.5s ease-in;
+  color: var(--color-text-primary);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.5s ease-in;
+}
+
+.animate-slideIn {
+  animation: slideIn 0.3s ease-out;
+}
+
+.lesson-content p {
+  margin-bottom: var(--spacing-md);
+  color: var(--color-text-secondary);
+}
+
+.lesson-content h1,
+.lesson-content h2,
+.lesson-content h3,
+.lesson-content h4 {
+  font-weight: 700;
+  margin-top: var(--spacing-lg);
+  margin-bottom: var(--spacing-sm);
+  color: var(--color-text-primary);
+}
+
+.lesson-content h1 {
+  font-size: 1.875rem;
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.lesson-content h2 {
+  font-size: 1.5rem;
+  color: var(--color-primary);
+}
+
+.lesson-content h3 {
+  font-size: 1.25rem;
+  color: var(--color-accent);
+}
+
+.lesson-content ul,
+.lesson-content ol {
+  margin-left: var(--spacing-lg);
+  margin-bottom: var(--spacing-md);
+  color: var(--color-text-secondary);
+}
+
+.lesson-content li {
+  margin-bottom: var(--spacing-sm);
+  padding-left: var(--spacing-sm);
+}
+
+.lesson-content code {
+  background-color: var(--color-primary-light);
+  color: var(--color-primary-dark);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  font-family: var(--font-family-mono);
+  border: 1px solid var(--color-border-light);
+}
+
+.lesson-content pre {
+  background: var(--color-bg-tertiary);
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  overflow-x: auto;
+  margin-bottom: var(--spacing-md);
+  border: 1px solid var(--color-border-medium);
+  position: relative;
+  box-shadow: var(--shadow-md);
+}
+
+.lesson-content pre::before {
+  content: "Code";
+  position: absolute;
+  top: var(--spacing-sm);
+  right: var(--spacing-sm);
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: var(--color-bg-primary);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border-light);
+}
+
+.lesson-content pre code {
+  background: transparent;
+  padding: 0;
+  color: var(--color-text-primary);
+  font-family: var(--font-family-mono);
+  border: none;
+}
+
+.lesson-content strong {
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.lesson-content em {
+  font-style: italic;
+  color: var(--color-primary);
+}
+
+.lesson-content a {
+  color: var(--color-primary);
+  text-decoration: underline;
+  transition: color 0.2s;
+}
+
+.lesson-content a:hover {
+  color: var(--color-primary-hover);
+}
+
+.lesson-content blockquote {
+  border-left: 4px solid var(--color-primary);
+  padding-left: var(--spacing-md);
+  margin: var(--spacing-md) 0;
+  font-style: italic;
+  color: var(--color-text-secondary);
+  background-color: var(--color-bg-tertiary);
+  padding: var(--spacing-md);
+  border-radius: var(--radius-sm);
+}
+
+/* Card Styles */
+.card {
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+}
+
+/* Button Styles */
+.btn-primary {
+  background: var(--color-primary);
+  color: var(--color-text-inverse);
+  border: none;
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.btn-primary:hover {
+  background: var(--color-primary-hover);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-secondary {
+  background: var(--color-secondary);
+  color: var(--color-text-inverse);
+  border: none;
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.btn-secondary:hover {
+  background: var(--color-secondary-hover);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--color-primary);
+  border: 2px solid var(--color-primary);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.btn-outline:hover {
+  background: var(--color-primary);
+  color: var(--color-text-inverse);
+}

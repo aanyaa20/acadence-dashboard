@@ -29,46 +29,105 @@ export default function Signup() {
   };
 
   return (
-    <div className="min-h-screen pt-24 flex items-center justify-center bg-slate-900 text-white">
+    <div className="min-h-screen pt-24 flex items-center justify-center" style={{ backgroundColor: 'var(--color-bg-secondary)' }}>
       <form
         onSubmit={handleSubmit}
-        className="bg-slate-800 p-6 rounded-xl w-96 shadow-lg"
+        className="p-8 rounded-xl w-full max-w-md shadow-custom-xl border"
+        style={{
+          backgroundColor: 'var(--color-bg-elevated)',
+          borderColor: 'var(--color-border-light)'
+        }}
       >
-        <h2 className="text-2xl font-bold mb-4">Signup</h2>
-        <input
-          name="name"
-          placeholder="Name"
-          className="w-full p-2 mb-3 rounded bg-slate-700"
-          onChange={handleChange}
-          required
-        />
-        <input
-          type="email"
-          name="email"
-          placeholder="Email"
-          className="w-full p-2 mb-3 rounded bg-slate-700"
-          onChange={handleChange}
-          required
-        />
-        <input
-          type="password"
-          name="password"
-          placeholder="Password"
-          className="w-full p-2 mb-3 rounded bg-slate-700"
-          onChange={handleChange}
-          required
-        />
+        <h2 className="text-3xl font-bold mb-6 text-center" style={{ color: 'var(--color-text-primary)' }}>
+          Create Account
+        </h2>
+        <p className="text-center mb-6" style={{ color: 'var(--color-text-secondary)' }}>
+          Join Acadence and start your learning journey
+        </p>
+        
+        <div className="mb-4">
+          <label className="block mb-2 text-sm font-medium" style={{ color: 'var(--color-text-secondary)' }}>
+            Full Name
+          </label>
+          <input
+            name="name"
+            placeholder="John Doe"
+            className="w-full p-3 rounded-lg border outline-none transition-all"
+            style={{
+              backgroundColor: 'var(--color-bg-primary)',
+              borderColor: 'var(--color-border-medium)',
+              color: 'var(--color-text-primary)'
+            }}
+            onFocus={(e) => e.target.style.borderColor = 'var(--color-primary)'}
+            onBlur={(e) => e.target.style.borderColor = 'var(--color-border-medium)'}
+            onChange={handleChange}
+            required
+          />
+        </div>
+        
+        <div className="mb-4">
+          <label className="block mb-2 text-sm font-medium" style={{ color: 'var(--color-text-secondary)' }}>
+            Email Address
+          </label>
+          <input
+            type="email"
+            name="email"
+            placeholder="you@example.com"
+            className="w-full p-3 rounded-lg border outline-none transition-all"
+            style={{
+              backgroundColor: 'var(--color-bg-primary)',
+              borderColor: 'var(--color-border-medium)',
+              color: 'var(--color-text-primary)'
+            }}
+            onFocus={(e) => e.target.style.borderColor = 'var(--color-primary)'}
+            onBlur={(e) => e.target.style.borderColor = 'var(--color-border-medium)'}
+            onChange={handleChange}
+            required
+          />
+        </div>
+        
+        <div className="mb-6">
+          <label className="block mb-2 text-sm font-medium" style={{ color: 'var(--color-text-secondary)' }}>
+            Password
+          </label>
+          <input
+            type="password"
+            name="password"
+            placeholder="••••••••"
+            className="w-full p-3 rounded-lg border outline-none transition-all"
+            style={{
+              backgroundColor: 'var(--color-bg-primary)',
+              borderColor: 'var(--color-border-medium)',
+              color: 'var(--color-text-primary)'
+            }}
+            onFocus={(e) => e.target.style.borderColor = 'var(--color-primary)'}
+            onBlur={(e) => e.target.style.borderColor = 'var(--color-border-medium)'}
+            onChange={handleChange}
+            required
+          />
+        </div>
+        
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-indigo-500 py-2 rounded hover:bg-indigo-600 transition"
+          className="w-full py-3 rounded-lg font-medium transition-all shadow-custom-sm"
+          style={{
+            backgroundColor: loading ? 'var(--color-text-muted)' : 'var(--color-secondary)',
+            color: 'var(--color-text-inverse)'
+          }}
+          onMouseEnter={(e) => {
+            if (!loading) e.currentTarget.style.backgroundColor = 'var(--color-secondary-hover)';
+          }}
+          onMouseLeave={(e) => {
+            if (!loading) e.currentTarget.style.backgroundColor = 'var(--color-secondary)';
+          }}
         >
-          {loading ? "Signing up..." : "Signup"}
+          {loading ? "Signing up..." : "Create Account"}
         </button>
 
-        <p className="text-sm text-gray-400 mt-3 text-center">
-          Already a user?{" "}
-          <Link to="/login" className="text-indigo-400 hover:underline">
+        <p className="text-sm mt-6 text-center" style={{ color: 'var(--color-text-secondary)' }}>
+          Already have an account?{" "}
+          <Link to="/login" className="font-medium" style={{ color: 'var(--color-primary)' }}>
             Login
           </Link>
         </p>

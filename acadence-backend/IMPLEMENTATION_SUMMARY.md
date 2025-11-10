@@ -186,7 +186,7 @@ Two separate configurations for different use cases:
 **Course Generation Model**:
 ```javascript
 {
-  model: "gemini-1.5-flash",
+  model: "gemini-2.5-flash",
   temperature: 0.7,  // More focused, consistent
   topP: 0.95,
   topK: 40,
@@ -197,7 +197,7 @@ Two separate configurations for different use cases:
 **Chatbot Model**:
 ```javascript
 {
-  model: "gemini-1.5-flash",
+  model: "gemini-2.5-flash",
   temperature: 0.9,  // More creative, varied
   topP: 1,
   topK: 40,
@@ -398,7 +398,7 @@ Course (updated)
 
 ## 🔮 Gemini API Configuration Summary
 
-**Model Used**: `gemini-1.5-flash`
+**Model Used**: `gemini-2.5-flash`
 - Fast and efficient
 - Good for structured tasks
 - Cost-effective

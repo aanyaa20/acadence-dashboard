@@ -11,10 +11,8 @@ import Courses from "./pages/Courses";
 import AllCourses from "./pages/AllCourses";
 import CourseDetails from "./pages/CourseDetails";
 import Progress from "./pages/Progress";
-import Payments from "./pages/Payments";
 import Settings from "./pages/Settings";
-import ProtectedRoute from "./components/ProtectedRoute"; // ✅ import
-
+import ProtectedRoute from "./components/ProtectedRoute";
 export default function App() {
   return (
     <>
@@ -50,7 +48,7 @@ export default function App() {
           <Route path="courses" element={<Courses />} />
           <Route path="allcourses" element={<AllCourses />} />
           <Route path="progress" element={<Progress />} />
-          <Route path="payments" element={<Payments />} />
+          
           <Route path="settings" element={<Settings />} />
         </Route>
       </Routes>

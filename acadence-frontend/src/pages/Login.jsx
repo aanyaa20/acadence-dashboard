@@ -29,35 +29,88 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-900 text-white pt-24">
+    <div className="min-h-screen flex items-center justify-center pt-24" style={{ backgroundColor: 'var(--color-bg-secondary)' }}>
       <form
         onSubmit={handleSubmit}
-        className="bg-slate-800 p-6 rounded-xl w-96 shadow-lg"
+        className="p-8 rounded-xl w-full max-w-md shadow-custom-xl border"
+        style={{
+          backgroundColor: 'var(--color-bg-elevated)',
+          borderColor: 'var(--color-border-light)'
+        }}
       >
-        <h2 className="text-2xl font-bold mb-4">Login</h2>
-        <input
-          type="email"
-          name="email"
-          placeholder="Email"
-          className="w-full p-2 mb-3 rounded bg-slate-700"
-          onChange={handleChange}
-          required
-        />
-        <input
-          type="password"
-          name="password"
-          placeholder="Password"
-          className="w-full p-2 mb-3 rounded bg-slate-700"
-          onChange={handleChange}
-          required
-        />
+        <h2 className="text-3xl font-bold mb-6 text-center" style={{ color: 'var(--color-text-primary)' }}>
+          Welcome Back 👋
+        </h2>
+        <p className="text-center mb-6" style={{ color: 'var(--color-text-secondary)' }}>
+          Login to continue your learning journey
+        </p>
+        
+        <div className="mb-4">
+          <label className="block mb-2 text-sm font-medium" style={{ color: 'var(--color-text-secondary)' }}>
+            Email Address
+          </label>
+          <input
+            type="email"
+            name="email"
+            placeholder="you@example.com"
+            className="w-full p-3 rounded-lg border outline-none transition-all"
+            style={{
+              backgroundColor: 'var(--color-bg-primary)',
+              borderColor: 'var(--color-border-medium)',
+              color: 'var(--color-text-primary)'
+            }}
+            onFocus={(e) => e.target.style.borderColor = 'var(--color-primary)'}
+            onBlur={(e) => e.target.style.borderColor = 'var(--color-border-medium)'}
+            onChange={handleChange}
+            required
+          />
+        </div>
+        
+        <div className="mb-6">
+          <label className="block mb-2 text-sm font-medium" style={{ color: 'var(--color-text-secondary)' }}>
+            Password
+          </label>
+          <input
+            type="password"
+            name="password"
+            placeholder="••••••••"
+            className="w-full p-3 rounded-lg border outline-none transition-all"
+            style={{
+              backgroundColor: 'var(--color-bg-primary)',
+              borderColor: 'var(--color-border-medium)',
+              color: 'var(--color-text-primary)'
+            }}
+            onFocus={(e) => e.target.style.borderColor = 'var(--color-primary)'}
+            onBlur={(e) => e.target.style.borderColor = 'var(--color-border-medium)'}
+            onChange={handleChange}
+            required
+          />
+        </div>
+        
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-indigo-500 py-2 rounded hover:bg-indigo-600 transition"
+          className="w-full py-3 rounded-lg font-medium transition-all shadow-custom-sm"
+          style={{
+            backgroundColor: loading ? 'var(--color-text-muted)' : 'var(--color-primary)',
+            color: 'var(--color-text-inverse)'
+          }}
+          onMouseEnter={(e) => {
+            if (!loading) e.currentTarget.style.backgroundColor = 'var(--color-primary-hover)';
+          }}
+          onMouseLeave={(e) => {
+            if (!loading) e.currentTarget.style.backgroundColor = 'var(--color-primary)';
+          }}
         >
           {loading ? "Logging in..." : "Login"}
         </button>
+        
+        <p className="mt-6 text-center text-sm" style={{ color: 'var(--color-text-secondary)' }}>
+          Don't have an account?{" "}
+          <a href="/signup" className="font-medium" style={{ color: 'var(--color-primary)' }}>
+            Sign up
+          </a>
+        </p>
       </form>
     </div>
   );

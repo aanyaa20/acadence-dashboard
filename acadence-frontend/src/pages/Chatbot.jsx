@@ -3,7 +3,7 @@ import DashboardLayout from "./DashboardLayout";
 
 export default function Chatbot() {
   const [messages, setMessages] = useState([
-    { from: "bot", text: "Hi 👋, how can I help you today?" },
+    { from: "bot", text: "Hi, how can I help you today?" },
   ]);
   const [input, setInput] = useState("");
 
