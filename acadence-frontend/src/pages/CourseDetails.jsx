@@ -92,6 +92,15 @@ export default function CourseDetails() {
       const authToken = localStorage.getItem('token');
       const isCompleting = !isCurrentlyCompleted; // Toggle
       
+      console.log('='.repeat(80));
+      console.log('🎯 LESSON TOGGLE REQUEST');
+      console.log('Lesson ID:', lessonId);
+      console.log('isCurrentlyCompleted:', isCurrentlyCompleted);
+      console.log('isCompleting:', isCompleting);
+      console.log('Token exists:', !!authToken);
+      console.log('API URL:', `${API_BASE_URL}/api/lessons/${lessonId}/complete`);
+      console.log('='.repeat(80));
+      
       const response = await axios.patch(
         `${API_BASE_URL}/api/lessons/${lessonId}/complete`,
         { isCompleting },
@@ -99,6 +108,8 @@ export default function CourseDetails() {
           headers: { Authorization: `Bearer ${authToken}` },
         }
       );
+
+      console.log('✅ Response:', response.data);
 
       // Update completed lessons array
       if (isCompleting && !completedLessons.includes(lessonId)) {
@@ -117,7 +128,10 @@ export default function CourseDetails() {
         await refreshUser();
       }
     } catch (error) {
-      console.error("Error toggling lesson completion:", error);
+      console.error("❌ Error toggling lesson completion:", error);
+      console.error("❌ Error response:", error.response?.data);
+      console.error("❌ Error status:", error.response?.status);
+      console.error("❌ Full error:", error);
       toast.error(error.response?.data?.message || "Failed to update lesson status");
     }
   };
@@ -130,26 +144,14 @@ export default function CourseDetails() {
   const handleQuizComplete = async (results) => {
     console.log("🎯 Quiz completed! Results:", results);
     
-    // Show success message with points
-    if (results.pointsAwarded > 0) {
-      toast.success(`Quiz completed! You earned ${results.pointsAwarded} points! (${results.percentage}% score)`, {
-        duration: 5000,
-      });
-    } else if (results.alreadyCompleted) {
-      toast.info(`Quiz already completed. Score: ${results.percentage}%`);
-    } else {
-      toast.success(`Quiz completed with ${results.percentage}% score!`);
-    }
+    // No toast notifications - QuizTaker component shows full results card
+    // Don't refresh course details here - it will unmount the QuizTaker and hide the results
     
-    // Refresh user data to update points globally
+    // Only refresh user data to update points globally
     if (refreshUser) {
       console.log("🔄 Calling refreshUser...");
       await refreshUser();
     }
-    
-    // Refresh course data
-    console.log("🔄 Refreshing course details...");
-    await fetchCourseDetails();
   };
 
   const handleUnenroll = async () => {
@@ -499,27 +501,35 @@ export default function CourseDetails() {
                       />
                     </div>
 
-                    {/* Complete Lesson Button */}
-                    <div className="flex justify-between items-center pt-4 border-t" style={{ borderColor: 'var(--color-border-light)' }}>
-                      <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
-                        {completedLessons.includes(lesson._id) 
-                          ? "✅ You've completed this lesson! (Click to mark as incomplete)" 
-                          : "Finished reading? Mark this lesson as complete to track your progress."}
-                      </p>
-                      <button
-                        onClick={() => handleLessonComplete(lesson._id, completedLessons.includes(lesson._id))}
-                        className="flex items-center gap-2 px-6 py-2.5 rounded-lg font-semibold transition-all transform hover:scale-105 shadow-lg"
-                        style={{
-                          background: completedLessons.includes(lesson._id)
-                            ? 'linear-gradient(to right, #6b7280, #9ca3af)' // Gray for incomplete
-                            : 'linear-gradient(to right, var(--color-success), #10b981)', // Green for complete
-                          color: 'var(--color-text-inverse)'
-                        }}
-                      >
-                        <FaCheck />
-                        {completedLessons.includes(lesson._id) ? 'Mark Incomplete' : 'Mark Complete'}
-                      </button>
-                    </div>
+                    {/* Complete Lesson Button - Only show if not completed */}
+                    {!completedLessons.includes(lesson._id) && (
+                      <div className="flex justify-between items-center pt-4 border-t" style={{ borderColor: 'var(--color-border-light)' }}>
+                        <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
+                          Finished reading? Mark this lesson as complete to track your progress.
+                        </p>
+                        <button
+                          onClick={() => handleLessonComplete(lesson._id, false)}
+                          className="flex items-center gap-2 px-6 py-2.5 rounded-lg font-semibold transition-all transform hover:scale-105 shadow-lg"
+                          style={{
+                            background: 'linear-gradient(to right, var(--color-success), #10b981)',
+                            color: 'var(--color-text-inverse)'
+                          }}
+                        >
+                          <FaCheck />
+                          Mark Complete
+                        </button>
+                      </div>
+                    )}
+                    
+                    {/* Completed Status - Show when completed */}
+                    {completedLessons.includes(lesson._id) && (
+                      <div className="flex items-center gap-2 pt-4 border-t" style={{ borderColor: 'var(--color-border-light)' }}>
+                        <FaCheck className="text-green-400" />
+                        <p className="text-sm font-semibold" style={{ color: 'var(--color-success)' }}>
+                          ✅ Lesson Completed!
+                        </p>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

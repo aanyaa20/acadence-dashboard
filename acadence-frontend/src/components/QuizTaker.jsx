@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FaCheckCircle, FaTimesCircle, FaTrophy } from 'react-icons/fa';
+import { CheckCircle2, XCircle, Trophy, Award, Target, Lightbulb } from 'lucide-react';
 import axios from 'axios';
 import API_BASE_URL from '../config';
 import toast from 'react-hot-toast';
@@ -10,6 +10,8 @@ const QuizTaker = ({ quiz, onComplete }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [results, setResults] = useState(null);
   const [showResults, setShowResults] = useState(false);
+
+  console.log('🎮 QuizTaker rendered - showResults:', showResults, 'results:', results);
 
   const handleAnswerSelect = (answer) => {
     setSelectedAnswers({
@@ -64,15 +66,21 @@ const QuizTaker = ({ quiz, onComplete }) => {
         }
       );
 
+      console.log('✅ Quiz submitted successfully!');
+      console.log('📊 Results:', response.data);
+      
       setResults(response.data);
       setShowResults(true);
       
-      // Call onComplete callback - parent will handle toast notifications
+      console.log('🎯 showResults set to:', true);
+      console.log('🎯 results state:', response.data);
+      
+      // Call onComplete callback - parent will handle refreshing
       if (onComplete) {
         onComplete(response.data);
       }
     } catch (error) {
-      console.error('Error submitting quiz:', error);
+      console.error('❌ Error submitting quiz:', error);
       toast.error(error.response?.data?.message || 'Failed to submit quiz');
     } finally {
       setIsSubmitting(false);
@@ -105,17 +113,25 @@ const QuizTaker = ({ quiz, onComplete }) => {
       <div className="max-w-2xl mx-auto p-6 animate-fadeIn">
         <div className="bg-gradient-to-br from-purple-900/30 to-blue-900/30 rounded-2xl p-8 border border-purple-500/30">
           <div className="text-center mb-8">
-            <FaTrophy className="text-yellow-400 text-6xl mx-auto mb-4" />
+            <div className="flex justify-center mb-4">
+              <Trophy className="text-yellow-400 w-16 h-16" />
+            </div>
             <h2 className="text-3xl font-bold text-white mb-2">Quiz Completed!</h2>
             <p className="text-gray-300">Here are your results</p>
           </div>
 
           <div className="grid grid-cols-2 gap-4 mb-6">
             <div className="bg-gray-800/50 rounded-lg p-4 text-center">
+              <div className="flex justify-center mb-2">
+                <Target className="text-purple-400 w-6 h-6" />
+              </div>
               <p className="text-gray-400 text-sm mb-1">Your Score</p>
               <p className="text-3xl font-bold text-white">{results.percentage}%</p>
             </div>
             <div className="bg-gray-800/50 rounded-lg p-4 text-center">
+              <div className="flex justify-center mb-2">
+                <Award className="text-green-400 w-6 h-6" />
+              </div>
               <p className="text-gray-400 text-sm mb-1">Correct Answers</p>
               <p className="text-3xl font-bold text-green-400">
                 {results.correctAnswers}/{results.totalQuestions}
@@ -124,9 +140,10 @@ const QuizTaker = ({ quiz, onComplete }) => {
           </div>
 
           {results.pointsAwarded > 0 && (
-            <div className="bg-yellow-500/20 border border-yellow-500/30 rounded-lg p-4 mb-6 text-center">
+            <div className="bg-yellow-500/20 border border-yellow-500/30 rounded-lg p-4 mb-6 flex items-center justify-center gap-2">
+              <Award className="text-yellow-400 w-5 h-5" />
               <p className="text-yellow-400 font-semibold">
-                🎉 You earned {results.pointsAwarded} Learning Points!
+                You earned {results.pointsAwarded} Learning Points!
               </p>
             </div>
           )}
@@ -140,38 +157,46 @@ const QuizTaker = ({ quiz, onComplete }) => {
           )}
 
           <div className="space-y-4 mb-6">
-            <h3 className="text-xl font-semibold text-white mb-4">Review Answers:</h3>
+            <h3 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+              <Lightbulb className="w-6 h-6 text-purple-400" />
+              Review Answers
+            </h3>
             {quiz.questions.map((question, index) => {
               const result = results.results[index];
               return (
-                <div key={index} className="bg-gray-800/50 rounded-lg p-4">
-                  <div className="flex items-start gap-3 mb-2">
+                <div key={index} className="bg-gray-800/50 rounded-lg p-4 border border-gray-700/50">
+                  <div className="flex items-start gap-3">
                     {result.isCorrect ? (
-                      <FaCheckCircle className="text-green-400 text-xl mt-1 flex-shrink-0" />
+                      <CheckCircle2 className="text-green-400 w-6 h-6 mt-1 flex-shrink-0" />
                     ) : (
-                      <FaTimesCircle className="text-red-400 text-xl mt-1 flex-shrink-0" />
+                      <XCircle className="text-red-400 w-6 h-6 mt-1 flex-shrink-0" />
                     )}
                     <div className="flex-1">
-                      <p className="text-white font-medium mb-2">
+                      <p className="text-white font-medium mb-3">
                         {index + 1}. {question.ques}
                       </p>
-                      <p className="text-sm mb-1">
-                        <span className="text-gray-400">Your answer: </span>
-                        <span className={result.isCorrect ? 'text-green-400' : 'text-red-400'}>
-                          {result.selectedAnswer}
-                        </span>
-                      </p>
-                      {!result.isCorrect && (
+                      <div className="space-y-2">
                         <p className="text-sm">
-                          <span className="text-gray-400">Correct answer: </span>
-                          <span className="text-green-400">{question.correctAnswer}</span>
+                          <span className="text-gray-400">Your answer: </span>
+                          <span className={result.isCorrect ? 'text-green-400 font-semibold' : 'text-red-400 font-semibold'}>
+                            {result.selectedAnswer}
+                          </span>
                         </p>
-                      )}
-                      {question.explanation && (
-                        <p className="text-sm text-gray-300 mt-2 italic">
-                          💡 {question.explanation}
-                        </p>
-                      )}
+                        {!result.isCorrect && (
+                          <p className="text-sm">
+                            <span className="text-gray-400">Correct answer: </span>
+                            <span className="text-green-400 font-semibold">{question.correctAnswer}</span>
+                          </p>
+                        )}
+                        {question.explanation && (
+                          <div className="flex items-start gap-2 mt-3 p-3 bg-blue-900/20 rounded-lg border border-blue-500/20">
+                            <Lightbulb className="w-4 h-4 text-blue-400 mt-0.5 flex-shrink-0" />
+                            <p className="text-sm text-blue-300">
+                              {question.explanation}
+                            </p>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>

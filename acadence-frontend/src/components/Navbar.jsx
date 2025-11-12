@@ -1,5 +1,5 @@
 // src/components/Navbar.jsx
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect, useContext } from "react";
 import { FaChevronDown, FaChevronUp, FaMoon, FaSun, FaFire, FaInfoCircle, FaEnvelope } from "react-icons/fa";
 import { AuthContext } from "../context/AuthContext";
@@ -16,6 +16,7 @@ export default function Navbar() {
   const [streak, setStreak] = useState(0);
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const token = localStorage.getItem("token");
 
@@ -43,6 +44,22 @@ export default function Navbar() {
     navigate("/login");
   }
 
+  // Handle About/Contact navigation
+  const handleScrollToSection = (sectionId) => {
+    // Check if we're on the home page
+    if (location.pathname === '/') {
+      // Already on home page, just scroll
+      document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      // Navigate to home page first, then scroll
+      navigate('/');
+      // Wait for navigation and render, then scroll
+      setTimeout(() => {
+        document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    }
+  };
+
   return (
     <nav className="px-6 py-4 flex justify-between items-center shadow-custom-md fixed top-0 left-0 w-full z-50 border-b" style={{
       backgroundColor: 'var(--color-bg-primary)',
@@ -65,12 +82,8 @@ export default function Navbar() {
       <div className="flex items-center space-x-6">
         {/* Navigation Links */}
         <div className="hidden md:flex items-center space-x-4">
-          <a
-            href="#about"
-            onClick={(e) => {
-              e.preventDefault();
-              document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' });
-            }}
+          <button
+            onClick={() => handleScrollToSection('about')}
             className="flex items-center gap-2 text-sm font-medium transition-colors px-3 py-2 rounded-lg hover:bg-opacity-10 cursor-pointer"
             style={{ color: 'var(--color-text-secondary)' }}
             onMouseEnter={(e) => {
@@ -84,13 +97,9 @@ export default function Navbar() {
           >
             <FaInfoCircle />
             About
-          </a>
-          <a
-            href="#contact"
-            onClick={(e) => {
-              e.preventDefault();
-              document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });
-            }}
+          </button>
+          <button
+            onClick={() => handleScrollToSection('contact')}
             className="flex items-center gap-2 text-sm font-medium transition-colors px-3 py-2 rounded-lg hover:bg-opacity-10 cursor-pointer"
             style={{ color: 'var(--color-text-secondary)' }}
             onMouseEnter={(e) => {
@@ -104,7 +113,7 @@ export default function Navbar() {
           >
             <FaEnvelope />
             Contact
-          </a>
+          </button>
         </div>
         {/* Streak Indicator - Only show when logged in */}
         {token && (

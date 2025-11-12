@@ -13,7 +13,7 @@ router.get('/course/:courseId', authenticateToken, async (req, res) => {
     // First check if the course belongs to the user
     const course = await Course.findOne({
       _id: req.params.courseId,
-      userId: req.user.userId
+      userId: userId
     });
 
     if (!course) {
@@ -47,10 +47,12 @@ router.get('/:id', authenticateToken, async (req, res) => {
       return res.status(404).json({ message: 'Lesson not found' });
     }
 
+    const userId = req.user.id || req.user.userId;
+    
     // Check if the lesson belongs to a course owned by the user
     const course = await Course.findOne({
       _id: lesson.courseId,
-      userId: req.user.userId
+      userId: userId
     });
 
     if (!course) {
@@ -66,12 +68,13 @@ router.get('/:id', authenticateToken, async (req, res) => {
 // Create a new lesson
 router.post('/', authenticateToken, async (req, res) => {
   try {
+    const userId = req.user.id || req.user.userId;
     const { courseId, title, content, points } = req.body;
 
     // Check if the course belongs to the user
     const course = await Course.findOne({
       _id: courseId,
-      userId: req.user.userId
+      userId: userId
     });
 
     if (!course) {
@@ -189,15 +192,23 @@ router.patch('/:id/complete', authenticateToken, async (req, res) => {
     const userId = req.user.id || req.user.userId;
     const { isCompleting } = req.body; // true = mark complete, false = mark incomplete
     
-    console.log(`🎯 ${isCompleting ? 'Completing' : 'Uncompleting'} lesson for user:`, userId);
+    console.log("=".repeat(80));
+    console.log(`🎯 LESSON COMPLETION REQUEST`);
+    console.log(`Lesson ID: ${req.params.id}`);
+    console.log(`User ID: ${userId}`);
+    console.log(`Action: ${isCompleting ? 'MARK COMPLETE' : 'MARK INCOMPLETE'}`);
+    console.log(`Request body:`, req.body);
+    console.log("=".repeat(80));
     
     const lesson = await Lesson.findById(req.params.id);
 
     if (!lesson) {
+      console.error("❌ Lesson not found with ID:", req.params.id);
       return res.status(404).json({ message: 'Lesson not found' });
     }
 
     console.log("📚 Lesson found:", lesson.title);
+    console.log("📚 Lesson courseId:", lesson.courseId);
 
     // Check if user already completed this lesson
     const alreadyCompleted = lesson.completedBy.some(

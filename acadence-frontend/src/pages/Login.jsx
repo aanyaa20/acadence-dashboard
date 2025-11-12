@@ -39,10 +39,10 @@ export default function Login() {
         }}
       >
         <h2 className="text-3xl font-bold mb-6 text-center" style={{ color: 'var(--color-text-primary)' }}>
-          Welcome Back 👋
+        Login/Signup
         </h2>
         <p className="text-center mb-6" style={{ color: 'var(--color-text-secondary)' }}>
-          Login to continue your learning journey
+        Continue your learning journey
         </p>
         
         <div className="mb-4">
@@ -52,7 +52,7 @@ export default function Login() {
           <input
             type="email"
             name="email"
-            placeholder="you@example.com"
+            placeholder="Enter your email address"
             className="w-full p-3 rounded-lg border outline-none transition-all"
             style={{
               backgroundColor: 'var(--color-bg-primary)',

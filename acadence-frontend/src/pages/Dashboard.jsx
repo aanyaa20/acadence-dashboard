@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useContext } from "react";
+import { useNavigate } from "react-router-dom";
 import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
 import axios from "axios";
@@ -20,6 +21,7 @@ import { FaStar, FaClock, FaBookOpen, FaCheckCircle, FaTrophy, FaFire, FaSyncAlt
 
 export default function Dashboard() {
   const { user, refreshUser } = useContext(AuthContext);
+  const navigate = useNavigate();
   const [stats, setStats] = useState({
     points: 0,
     completed: 0,
@@ -372,111 +374,251 @@ export default function Dashboard() {
       </section>
 
       {/* Panels */}
-      <section className="grid grid-cols-3 gap-6">
-        {/* Quick Progress Overview */}
-        <div className="col-span-2 rounded-2xl shadow-custom-xl p-6 bg-elevated border border-light">
-          <h3 className="text-primary text-xl font-semibold mb-6 flex items-center gap-2">
-            <FaTrophy className="text-yellow-500" /> Your Learning Journey
-          </h3>
-          
-          <div className="grid grid-cols-3 gap-5">
-            {/* Total Courses Card */}
-            <div className="p-5 rounded-xl border-2 transition-all hover:scale-105" style={{
-              background: 'linear-gradient(135deg, #6d28d9 0%, #4c1d95 100%)',
-              borderColor: 'rgba(109, 40, 217, 0.3)'
-            }}>
-              <div className="flex items-center justify-between mb-3">
-                <FaBookOpen className="text-3xl text-white opacity-80" />
-                <div className="text-right">
-                  <div className="text-3xl font-bold text-white">
-                    {recentCourses.length}
-                  </div>
-                  <div className="text-xs text-white opacity-75 mt-1">
-                    Enrolled Courses
-                  </div>
-                </div>
+      <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left Column: Quick Course Access + Learning Goals + Badges */}
+        <div className="lg:col-span-1 space-y-6">
+          {/* 1. Quick Course Access */}
+          <div className="rounded-2xl shadow-custom-xl p-6 bg-elevated border border-light">
+            <h3 className="text-primary text-xl font-semibold mb-4 flex items-center gap-2">
+              <FaBookOpen className="text-purple-500" /> Continue Learning
+            </h3>
+            
+            {recentCourses.length === 0 ? (
+              <div className="text-center py-6">
+                <div className="text-4xl mb-3">📚</div>
+                <p className="text-sm mb-4" style={{ color: 'var(--color-text-secondary)' }}>
+                  No courses yet. Start your first course!
+                </p>
+                <button
+                  onClick={() => navigate('/dashboard/allcourses')}
+                  className="px-4 py-2 rounded-lg font-semibold text-sm transition-all"
+                  style={{
+                    background: 'var(--gradient-primary)',
+                    color: 'var(--color-text-inverse)'
+                  }}
+                >
+                  Browse Courses
+                </button>
               </div>
-              <div className="text-xs text-white opacity-70">
-                Keep learning to unlock more!
-              </div>
-            </div>
-
-            {/* Completed Lessons Card */}
-            <div className="p-5 rounded-xl border-2 transition-all hover:scale-105" style={{
-              background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-              borderColor: 'rgba(16, 185, 129, 0.3)'
-            }}>
-              <div className="flex items-center justify-between mb-3">
-                <FaCheckCircle className="text-3xl text-white opacity-80" />
-                <div className="text-right">
-                  <div className="text-3xl font-bold text-white">
-                    {stats.completed}
+            ) : (
+              <div className="space-y-3">
+                {recentCourses.slice(0, 2).map((course, idx) => (
+                  <div 
+                    key={course._id || idx}
+                    className="p-4 rounded-xl border transition-all hover:scale-[1.02] hover:shadow-lg cursor-pointer"
+                    style={{ 
+                      backgroundColor: 'var(--color-bg-tertiary)',
+                      borderColor: 'var(--color-border-light)'
+                    }}
+                    onClick={() => navigate(`/dashboard/courses/${course._id}`)}
+                  >
+                    <div className="flex items-start gap-3 mb-3">
+                      <div className="w-12 h-12 rounded-lg flex items-center justify-center text-xl flex-shrink-0" 
+                        style={{ background: 'linear-gradient(135deg, #6d28d9 0%, #4c1d95 100%)' }}>
+                        📖
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-sm font-semibold mb-1 line-clamp-2" style={{ color: 'var(--color-text-primary)' }}>
+                          {course.title}
+                        </h4>
+                        <p className="text-xs" style={{ color: 'var(--color-text-tertiary)' }}>
+                          {course.completedLessons || 0} / {course.totalLessons || 0} lessons completed
+                        </p>
+                      </div>
+                    </div>
+                    <div className="w-full bg-gray-700 rounded-full h-2">
+                      <div 
+                        className="h-2 rounded-full transition-all" 
+                        style={{ 
+                          width: `${course.totalLessons > 0 ? ((course.completedLessons || 0) / course.totalLessons) * 100 : 0}%`,
+                          background: 'linear-gradient(90deg, #6d28d9 0%, #10b981 100%)'
+                        }}
+                      ></div>
+                    </div>
                   </div>
-                  <div className="text-xs text-white opacity-75 mt-1">
-                    Lessons Completed
-                  </div>
-                </div>
+                ))}
+                
+                {recentCourses.length > 2 && (
+                  <button
+                    onClick={() => navigate('/dashboard/allcourses')}
+                    className="w-full py-2 rounded-lg text-sm font-medium transition-all"
+                    style={{
+                      backgroundColor: 'var(--color-bg-tertiary)',
+                      color: 'var(--color-primary)',
+                      border: '1px solid var(--color-border-light)'
+                    }}
+                  >
+                    View All Courses
+                  </button>
+                )}
               </div>
-              <div className="text-xs text-white opacity-70">
-                {stats.completed === 0 ? "Start your first lesson!" : "Amazing progress!"}
-              </div>
-            </div>
-
-            {/* Learning Points Card */}
-            <div className="p-5 rounded-xl border-2 transition-all hover:scale-105" style={{
-              background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-              borderColor: 'rgba(245, 158, 11, 0.3)'
-            }}>
-              <div className="flex items-center justify-between mb-3">
-                <FaStar className="text-3xl text-white opacity-80" />
-                <div className="text-right">
-                  <div className="text-3xl font-bold text-white">
-                    {user?.totalPoints || stats.points || 0}
-                  </div>
-                  <div className="text-xs text-white opacity-75 mt-1">
-                    Total Points
-                  </div>
-                </div>
-              </div>
-              <div className="text-xs text-white opacity-70">
-                Earn 5 pts per lesson, 20 per quiz!
-              </div>
-            </div>
+            )}
           </div>
 
-          {/* Progress Motivation */}
-          <div className="mt-6 p-4 rounded-xl" style={{ backgroundColor: 'var(--color-bg-tertiary)' }}>
-            <div className="flex items-center gap-3">
-              <div className="text-3xl">
-                {progress === 0 ? "🚀" : progress < 30 ? "🌱" : progress < 60 ? "🌿" : progress < 90 ? "🌳" : "🏆"}
-              </div>
-              <div className="flex-1">
-                <div className="text-sm font-semibold mb-1" style={{ color: 'var(--color-text-primary)' }}>
-                  {progress === 0 ? "Ready to start your learning journey?" : 
-                   progress < 30 ? "Great start! Keep the momentum going!" :
-                   progress < 60 ? "You're making excellent progress!" :
-                   progress < 90 ? "Almost there! You're doing amazing!" :
-                   "Congratulations! You're crushing it!"}
+          {/* 2. Learning Goals Widget */}
+          <div className="rounded-2xl shadow-custom-xl p-6 bg-elevated border border-light">
+            <h3 className="text-primary text-xl font-semibold mb-4 flex items-center gap-2">
+              🎯 Weekly Goals
+            </h3>
+            
+            <div className="space-y-4">
+              {/* Goal 1: Complete Lessons */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>
+                    Complete 5 lessons
+                  </span>
+                  <span className="text-xs font-bold" style={{ color: 'var(--color-primary)' }}>
+                    {Math.min(stats.completed, 5)}/5
+                  </span>
                 </div>
                 <div className="w-full bg-gray-700 rounded-full h-2">
                   <div 
-                    className="h-2 rounded-full transition-all duration-500" 
+                    className="h-2 rounded-full transition-all" 
                     style={{ 
-                      width: `${progress}%`,
-                      background: 'linear-gradient(90deg, #6d28d9 0%, #10b981 100%)'
+                      width: `${Math.min((stats.completed / 5) * 100, 100)}%`,
+                      background: 'linear-gradient(90deg, #10b981 0%, #059669 100%)'
                     }}
                   ></div>
                 </div>
-                <div className="text-xs mt-1" style={{ color: 'var(--color-text-tertiary)' }}>
-                  {progress}% Overall Progress
+              </div>
+
+              {/* Goal 2: Earn Points */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>
+                    Earn 100 points
+                  </span>
+                  <span className="text-xs font-bold" style={{ color: 'var(--color-warning)' }}>
+                    {Math.min(user?.totalPoints || 0, 100)}/100
+                  </span>
+                </div>
+                <div className="w-full bg-gray-700 rounded-full h-2">
+                  <div 
+                    className="h-2 rounded-full transition-all" 
+                    style={{ 
+                      width: `${Math.min(((user?.totalPoints || 0) / 100) * 100, 100)}%`,
+                      background: 'linear-gradient(90deg, #f59e0b 0%, #d97706 100%)'
+                    }}
+                  ></div>
                 </div>
               </div>
+
+              {/* Goal 3: Maintain Streak */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>
+                    7-day streak
+                  </span>
+                  <span className="text-xs font-bold" style={{ color: '#F97316' }}>
+                    {Math.min(calculateStreak(), 7)}/7
+                  </span>
+                </div>
+                <div className="w-full bg-gray-700 rounded-full h-2">
+                  <div 
+                    className="h-2 rounded-full transition-all" 
+                    style={{ 
+                      width: `${Math.min((calculateStreak() / 7) * 100, 100)}%`,
+                      background: 'linear-gradient(90deg, #FB923C 0%, #F97316 100%)'
+                    }}
+                  ></div>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-4 p-3 rounded-lg text-center" style={{ backgroundColor: 'var(--color-bg-tertiary)' }}>
+              <p className="text-xs font-semibold" style={{ color: 'var(--color-text-secondary)' }}>
+                Keep going! You're making great progress! 💪
+              </p>
+            </div>
+          </div>
+
+          {/* 3. Achievement Badges */}
+          <div className="rounded-2xl shadow-custom-xl p-6 bg-elevated border border-light">
+            <h3 className="text-primary text-xl font-semibold mb-4 flex items-center gap-2">
+              <FaTrophy className="text-yellow-500" /> Achievements
+            </h3>
+            
+            <div className="grid grid-cols-3 gap-3">
+              {/* Badge 1: First Course */}
+              <div className="text-center">
+                <div className={`w-16 h-16 mx-auto rounded-full flex items-center justify-center text-2xl mb-2 transition-all ${
+                  recentCourses.length > 0 ? 'bg-gradient-to-br from-purple-500 to-purple-700 shadow-lg' : 'bg-gray-700 opacity-40'
+                }`}>
+                  {recentCourses.length > 0 ? '🎓' : '🔒'}
+                </div>
+                <p className="text-xs font-medium" style={{ color: recentCourses.length > 0 ? 'var(--color-text-primary)' : 'var(--color-text-tertiary)' }}>
+                  First Course
+                </p>
+              </div>
+
+              {/* Badge 2: Week Streak */}
+              <div className="text-center">
+                <div className={`w-16 h-16 mx-auto rounded-full flex items-center justify-center text-2xl mb-2 transition-all ${
+                  calculateStreak() >= 7 ? 'bg-gradient-to-br from-orange-500 to-red-600 shadow-lg' : 'bg-gray-700 opacity-40'
+                }`}>
+                  {calculateStreak() >= 7 ? '🔥' : '🔒'}
+                </div>
+                <p className="text-xs font-medium" style={{ color: calculateStreak() >= 7 ? 'var(--color-text-primary)' : 'var(--color-text-tertiary)' }}>
+                  Week Streak
+                </p>
+              </div>
+
+              {/* Badge 3: Quiz Master */}
+              <div className="text-center">
+                <div className={`w-16 h-16 mx-auto rounded-full flex items-center justify-center text-2xl mb-2 transition-all ${
+                  (user?.totalPoints || 0) >= 100 ? 'bg-gradient-to-br from-green-500 to-emerald-700 shadow-lg' : 'bg-gray-700 opacity-40'
+                }`}>
+                  {(user?.totalPoints || 0) >= 100 ? '⭐' : '🔒'}
+                </div>
+                <p className="text-xs font-medium" style={{ color: (user?.totalPoints || 0) >= 100 ? 'var(--color-text-primary)' : 'var(--color-text-tertiary)' }}>
+                  Quiz Master
+                </p>
+              </div>
+
+              {/* Badge 4: 10 Lessons */}
+              <div className="text-center">
+                <div className={`w-16 h-16 mx-auto rounded-full flex items-center justify-center text-2xl mb-2 transition-all ${
+                  stats.completed >= 10 ? 'bg-gradient-to-br from-blue-500 to-indigo-700 shadow-lg' : 'bg-gray-700 opacity-40'
+                }`}>
+                  {stats.completed >= 10 ? '📚' : '🔒'}
+                </div>
+                <p className="text-xs font-medium" style={{ color: stats.completed >= 10 ? 'var(--color-text-primary)' : 'var(--color-text-tertiary)' }}>
+                  10 Lessons
+                </p>
+              </div>
+
+              {/* Badge 5: Early Bird */}
+              <div className="text-center">
+                <div className="w-16 h-16 mx-auto rounded-full flex items-center justify-center text-2xl mb-2 bg-gray-700 opacity-40">
+                  🔒
+                </div>
+                <p className="text-xs font-medium" style={{ color: 'var(--color-text-tertiary)' }}>
+                  Early Bird
+                </p>
+              </div>
+
+              {/* Badge 6: Perfectionist */}
+              <div className="text-center">
+                <div className="w-16 h-16 mx-auto rounded-full flex items-center justify-center text-2xl mb-2 bg-gray-700 opacity-40">
+                  🔒
+                </div>
+                <p className="text-xs font-medium" style={{ color: 'var(--color-text-tertiary)' }}>
+                  Perfectionist
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-4 p-3 rounded-lg text-center" style={{ backgroundColor: 'var(--color-bg-tertiary)' }}>
+              <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
+                Unlock badges by completing goals! 🏆
+              </p>
             </div>
           </div>
         </div>
 
-        {/* Learning Streak Tracker */}
-        <div className="rounded-2xl shadow-custom-xl p-6 bg-elevated border border-light">
+        {/* Right Column: Learning Streak Tracker */}
+        <div className="lg:col-span-2 rounded-2xl shadow-custom-xl p-6 bg-elevated border border-light">
           <h3 className="text-primary text-xl font-semibold flex items-center gap-2 mb-5">
             <FaFire className="text-orange-500" /> Learning Streak
           </h3>

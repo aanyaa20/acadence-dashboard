@@ -69,7 +69,7 @@ JSON format:
   }
 }
 
-- Include 5-10 challenging quiz questions with 4 options each
+- Include exactly 5-6 challenging quiz questions with 4 options each
 - Make content DETAILED and comprehensive
 - Include practical examples and explanations
 - Provide video search terms for multimedia learning

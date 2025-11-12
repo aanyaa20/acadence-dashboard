@@ -51,7 +51,7 @@ export default function Signup() {
           </label>
           <input
             name="name"
-            placeholder="John Doe"
+            placeholder="Enter your full name"
             className="w-full p-3 rounded-lg border outline-none transition-all"
             style={{
               backgroundColor: 'var(--color-bg-primary)',
@@ -72,7 +72,7 @@ export default function Signup() {
           <input
             type="email"
             name="email"
-            placeholder="you@example.com"
+            placeholder="Enter your email address"
             className="w-full p-3 rounded-lg border outline-none transition-all"
             style={{
               backgroundColor: 'var(--color-bg-primary)',
