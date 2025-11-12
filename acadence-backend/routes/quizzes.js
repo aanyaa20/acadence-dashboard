@@ -214,16 +214,74 @@ router.post('/:id/submit', authenticateToken, async (req, res) => {
     
     await quiz.save();
 
-    // Award points only if first completion (20 points)
+    // Award points only if first completion (20 points) and update streak
     let pointsAwarded = 0;
     if (!alreadyCompleted) {
       const User = (await import('../models/User.js')).default;
       const user = await User.findById(userId);
+      console.log("👤 Quiz - Looking for user with ID:", userId);
+      console.log("👤 Quiz - User found:", user ? `Yes - ${user.name}` : "NO USER FOUND!");
+      
       if (user) {
+        const oldPoints = user.totalPoints;
+        // Award 20 points for quiz completion (regardless of score)
         user.totalPoints += 20;
-        await user.save();
         pointsAwarded = 20;
+        console.log(`🎁 Quiz - Awarded 20 points. Old: ${oldPoints} → New: ${user.totalPoints}`);
+        
+        // Update daily activity and streak
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        // Check if there's activity logged for today
+        const todayActivity = user.activityLog.find(log => {
+          const logDate = new Date(log.date);
+          logDate.setHours(0, 0, 0, 0);
+          return logDate.getTime() === today.getTime();
+        });
+        
+        if (!todayActivity) {
+          // Add new activity log for today
+          user.activityLog.push({
+            date: today,
+            lessonsCompleted: 0 // Quiz doesn't count as lesson, but marks activity
+          });
+          
+          // Update streak
+          if (user.lastActivityDate) {
+            const lastActivity = new Date(user.lastActivityDate);
+            lastActivity.setHours(0, 0, 0, 0);
+            
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+            
+            if (lastActivity.getTime() === yesterday.getTime()) {
+              // Consecutive day - increase streak
+              user.currentStreak += 1;
+            } else if (lastActivity.getTime() < yesterday.getTime()) {
+              // Streak broken - reset to 1
+              user.currentStreak = 1;
+            }
+          } else {
+            // First activity ever
+            user.currentStreak = 1;
+          }
+          
+          // Update longest streak if necessary
+          if (user.currentStreak > user.longestStreak) {
+            user.longestStreak = user.currentStreak;
+          }
+          
+          user.lastActivityDate = today;
+        }
+        
+        await user.save();
+        console.log("💾 Quiz - User saved successfully with new points!");
+      } else {
+        console.log("❌ Quiz ERROR: User not found, cannot award points!");
       }
+    } else {
+      console.log("ℹ️ Quiz already completed, no points awarded");
     }
 
     res.json({

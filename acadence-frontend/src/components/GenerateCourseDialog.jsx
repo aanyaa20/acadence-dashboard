@@ -13,15 +13,11 @@ export default function GenerateCourseDialog({ isOpen, onClose, onGenerate, isGe
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    // Clear error when user types
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: "" }));
-    }
+    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
   const validate = () => {
     const newErrors = {};
-
     if (!formData.topic.trim()) {
       newErrors.topic = "Course topic is required";
     } else if (formData.topic.trim().length < 3) {
@@ -39,31 +35,42 @@ export default function GenerateCourseDialog({ isOpen, onClose, onGenerate, isGe
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (validate()) {
-      onGenerate(formData);
-    }
+    if (validate()) onGenerate(formData);
   };
 
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
-      <div className="bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full p-6 relative animate-scale-in">
+      <div
+        className="rounded-2xl shadow-2xl max-w-md w-full p-6 relative animate-scale-in border"
+        style={{
+          backgroundColor: "var(--color-bg-elevated)",
+          borderColor: "var(--color-border-light)",
+        }}
+      >
         {/* Close Button */}
         <button
           onClick={onClose}
           disabled={isGenerating}
-          className="absolute top-4 right-4 text-gray-400 hover:text-white transition disabled:opacity-50"
+          className="absolute top-4 right-4 transition disabled:opacity-50"
+          style={{ color: "var(--color-text-tertiary)" }}
+          onMouseEnter={(e) => (e.currentTarget.style.color = "var(--color-text-primary)")}
+          onMouseLeave={(e) => (e.currentTarget.style.color = "var(--color-text-tertiary)")}
         >
           <FaTimes size={20} />
         </button>
 
         {/* Header */}
         <div className="flex items-center gap-3 mb-6">
-          <FaRobot className="text-indigo-400 text-3xl" />
+          <FaRobot className="text-3xl" style={{ color: "var(--color-primary)" }} />
           <div>
-            <h2 className="text-2xl font-bold text-white">Generate AI Course</h2>
-            <p className="text-gray-400 text-sm">Create a personalized course with AI</p>
+            <h2 className="text-2xl font-bold" style={{ color: "var(--color-text-primary)" }}>
+              Generate AI Course
+            </h2>
+            <p className="text-sm" style={{ color: "var(--color-text-secondary)" }}>
+              Create a personalized course with AI
+            </p>
           </div>
         </div>
 
@@ -71,7 +78,10 @@ export default function GenerateCourseDialog({ isOpen, onClose, onGenerate, isGe
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Topic Input */}
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label
+              className="block text-sm font-medium mb-2"
+              style={{ color: "var(--color-text-secondary)" }}
+            >
               Course Topic *
             </label>
             <input
@@ -81,18 +91,26 @@ export default function GenerateCourseDialog({ isOpen, onClose, onGenerate, isGe
               onChange={handleChange}
               placeholder="e.g., Web Development, Python Basics, Machine Learning"
               disabled={isGenerating}
-              className={`w-full px-4 py-3 bg-slate-700 border ${
-                errors.topic ? "border-red-500" : "border-slate-600"
-              } rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition disabled:opacity-50 disabled:cursor-not-allowed`}
+              className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{
+                backgroundColor: "var(--color-bg-secondary)",
+                borderColor: errors.topic ? "var(--color-error)" : "var(--color-border-light)",
+                color: "var(--color-text-primary)",
+              }}
             />
             {errors.topic && (
-              <p className="text-red-400 text-sm mt-1">{errors.topic}</p>
+              <p className="text-sm mt-1" style={{ color: "var(--color-error)" }}>
+                {errors.topic}
+              </p>
             )}
           </div>
 
           {/* Difficulty Select */}
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label
+              className="block text-sm font-medium mb-2"
+              style={{ color: "var(--color-text-secondary)" }}
+            >
               Difficulty Level
             </label>
             <select
@@ -100,7 +118,12 @@ export default function GenerateCourseDialog({ isOpen, onClose, onGenerate, isGe
               value={formData.difficulty}
               onChange={handleChange}
               disabled={isGenerating}
-              className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{
+                backgroundColor: "var(--color-bg-secondary)",
+                borderColor: "var(--color-border-light)",
+                color: "var(--color-text-primary)",
+              }}
             >
               <option value="beginner">Beginner</option>
               <option value="intermediate">Intermediate</option>
@@ -110,8 +133,11 @@ export default function GenerateCourseDialog({ isOpen, onClose, onGenerate, isGe
 
           {/* Number of Lessons */}
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Number of Lessons (3-10)
+            <label
+              className="block text-sm font-medium mb-2"
+              style={{ color: "var(--color-text-secondary)" }}
+            >
+              Number of Lessons (3–10)
             </label>
             <input
               type="number"
@@ -121,29 +147,44 @@ export default function GenerateCourseDialog({ isOpen, onClose, onGenerate, isGe
               min="3"
               max="10"
               disabled={isGenerating}
-              className={`w-full px-4 py-3 bg-slate-700 border ${
-                errors.numberOfLessons ? "border-red-500" : "border-slate-600"
-              } rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition disabled:opacity-50 disabled:cursor-not-allowed`}
+              className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{
+                backgroundColor: "var(--color-bg-secondary)",
+                borderColor: errors.numberOfLessons
+                  ? "var(--color-error)"
+                  : "var(--color-border-light)",
+                color: "var(--color-text-primary)",
+              }}
             />
             {errors.numberOfLessons && (
-              <p className="text-red-400 text-sm mt-1">{errors.numberOfLessons}</p>
+              <p className="text-sm mt-1" style={{ color: "var(--color-error)" }}>
+                {errors.numberOfLessons}
+              </p>
             )}
           </div>
 
-          {/* Action Buttons */}
+          {/* Buttons */}
           <div className="flex gap-3 mt-6">
             <button
               type="button"
               onClick={onClose}
               disabled={isGenerating}
-              className="flex-1 px-4 py-3 bg-slate-700 text-white rounded-lg hover:bg-slate-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-4 py-3 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{
+                backgroundColor: "var(--color-bg-tertiary)",
+                color: "var(--color-text-primary)",
+              }}
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isGenerating}
-              className="flex-1 px-4 py-3 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="flex-1 px-4 py-3 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              style={{
+                backgroundColor: "var(--color-primary)",
+                color: "var(--color-text-inverse)",
+              }}
             >
               {isGenerating ? (
                 <>
@@ -160,11 +201,17 @@ export default function GenerateCourseDialog({ isOpen, onClose, onGenerate, isGe
           </div>
         </form>
 
-        {/* Info Message */}
+        {/* Info */}
         {isGenerating && (
-          <div className="mt-4 p-3 bg-indigo-900/30 border border-indigo-500/30 rounded-lg">
-            <p className="text-indigo-300 text-sm text-center">
-              🤖 AI is creating your course... This may take 10-30 seconds
+          <div
+            className="mt-4 p-3 border rounded-lg"
+            style={{
+              backgroundColor: "var(--color-primary-light)",
+              borderColor: "var(--color-primary)",
+            }}
+          >
+            <p className="text-sm text-center" style={{ color: "var(--color-text-primary)" }}>
+              🤖 AI is creating your course... This may take 10–30 seconds
             </p>
           </div>
         )}
@@ -183,6 +230,21 @@ export default function GenerateCourseDialog({ isOpen, onClose, onGenerate, isGe
         }
         .animate-scale-in {
           animation: scale-in 0.2s ease-out;
+        }
+
+        /* 💜 Ultra-soft pastel violet palette */
+        :root {
+          --color-primary: #C8A2FF;
+          --color-primary-hover: #B388FF;
+          --color-primary-light: #F4EAFF;
+          --color-accent: #D8B4FE;
+        }
+
+        [data-theme="dark"] {
+          --color-primary: #B799FF;
+          --color-primary-hover: #A985FF;
+          --color-primary-light: #4C1D95;
+          --color-accent: #C4B5FD;
         }
       `}</style>
     </div>

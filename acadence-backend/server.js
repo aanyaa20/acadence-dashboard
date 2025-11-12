@@ -126,13 +126,142 @@ app.use("/api/lessons", lessonRoutes);
 app.use("/api/quizzes", quizRoutes);
 app.use("/api/generate-course", generateCourseRoutes);
 
-// ✅ Recommendations endpoint (placeholder)
-app.get("/api/recommendations", (req, res) => {
-  res.json([
-    { id: 1, title: "Introduction to Web Development", type: "course" },
-    { id: 2, title: "Python for Data Science", type: "course" },
-    { id: 3, title: "Machine Learning Basics", type: "course" }
-  ]);
+// ✅ AI-Powered Recommendations endpoint
+app.get("/api/recommendations/:userId", async (req, res) => {
+  try {
+    const { userId } = req.params;
+    console.log("🎯 Generating AI recommendations for user:", userId);
+
+    // Import models
+    const User = (await import("./models/User.js")).default;
+    const Course = (await import("./models/Course.js")).default;
+
+    // Fetch user and their courses
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const userCourses = await Course.find({ userId });
+
+    // Prepare data for AI
+    let coursesData = "";
+    if (userCourses.length > 0) {
+      coursesData = userCourses.map((course, index) => {
+        const completionRate = course.totalLessons > 0 
+          ? Math.round((course.completedLessons / course.totalLessons) * 100)
+          : 0;
+        
+        return `${index + 1}. "${course.title}"
+   - Topic: ${course.topic}
+   - Difficulty: ${course.difficulty}
+   - Progress: ${completionRate}% (${course.completedLessons}/${course.totalLessons} lessons)
+   - Status: ${completionRate === 100 ? 'Completed ✓' : completionRate > 0 ? 'In Progress' : 'Not Started'}`;
+      }).join('\n\n');
+    }
+
+    // Build AI prompt for recommendations
+    const prompt = `You are an expert educational advisor for Acadence, an online learning platform.
+
+User Profile:
+- Name: ${user.name}
+- Email: ${user.email}
+- Total Enrolled Courses: ${userCourses.length}
+
+${userCourses.length > 0 ? `Current Courses:\n${coursesData}` : 'No courses enrolled yet.'}
+
+Based on the user's learning journey, recommend 3 relevant courses they should take next. 
+
+${userCourses.length > 0 
+  ? `Consider:
+- Topics they've shown interest in
+- Natural progression from completed courses
+- Complementary skills to what they're learning
+- Difficulty progression (don't jump too high)
+- Fill knowledge gaps in their learning path`
+  : `Since they're a new learner, recommend:
+- Popular beginner-friendly courses
+- Foundational topics in different areas
+- Courses that build transferable skills`
+}
+
+Return ONLY a valid JSON array with exactly 3 course recommendations in this format:
+[
+  {
+    "title": "Course Name",
+    "topic": "Main Topic",
+    "difficulty": "beginner/intermediate/advanced",
+    "description": "2-3 sentence description of what they'll learn and why it's recommended for them",
+    "estimatedDuration": "X weeks",
+    "reason": "1 sentence explaining why this is recommended based on their current progress"
+  }
+]
+
+Important: Return ONLY the JSON array, no other text or explanation.`;
+
+    console.log("🤖 Calling Gemini for recommendations...");
+    
+    // Call Gemini API
+    const model = getCourseGenerationModel(); // Using course generation model for JSON response
+    const result = await model.generateContent(prompt);
+    const responseText = result.response.text();
+    
+    console.log("📝 Raw AI response:", responseText);
+
+    // Parse JSON response
+    let recommendations;
+    try {
+      // Clean the response (remove markdown code blocks if present)
+      const cleanedResponse = responseText
+        .replace(/```json\n?/g, '')
+        .replace(/```\n?/g, '')
+        .trim();
+      
+      recommendations = JSON.parse(cleanedResponse);
+      
+      // Validate structure
+      if (!Array.isArray(recommendations) || recommendations.length === 0) {
+        throw new Error("Invalid recommendations format");
+      }
+
+      console.log("✅ Generated", recommendations.length, "recommendations");
+      res.json(recommendations);
+
+    } catch (parseError) {
+      console.error("❌ Failed to parse AI response:", parseError);
+      // Fallback recommendations
+      res.json([
+        {
+          title: "Introduction to Programming",
+          topic: "Computer Science",
+          difficulty: "beginner",
+          description: "Start your coding journey with fundamental programming concepts, logic, and problem-solving skills.",
+          estimatedDuration: "4 weeks",
+          reason: "Perfect starting point for new learners"
+        },
+        {
+          title: "Web Development Fundamentals",
+          topic: "Web Development",
+          difficulty: "beginner",
+          description: "Learn HTML, CSS, and JavaScript basics to build your first websites and web applications.",
+          estimatedDuration: "6 weeks",
+          reason: "High-demand skill with immediate practical applications"
+        },
+        {
+          title: "Data Science Basics",
+          topic: "Data Science",
+          difficulty: "beginner",
+          description: "Explore data analysis, visualization, and statistical thinking to make data-driven decisions.",
+          estimatedDuration: "5 weeks",
+          reason: "Growing field with opportunities across all industries"
+        }
+      ]);
+    }
+
+  } catch (error) {
+    console.error("❌ Recommendations error:", error);
+    res.status(500).json({ error: "Failed to generate recommendations" });
+  }
 });
 
 // ✅ Test Gemini endpoint

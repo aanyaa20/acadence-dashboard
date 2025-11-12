@@ -127,20 +127,59 @@ router.post("/", authenticateToken, async (req, res) => {
     console.log("🤖 Getting Gemini model...");
     const model = getCourseGenerationModel();
 
-    // Generate course content
+    // Generate course content with retry logic for 503 errors
     console.log("📝 Sending prompt to Gemini...");
     const prompt = createCoursePrompt(topic, difficulty, numberOfLessons);
     
     let result;
-    try {
-      result = await model.generateContent(prompt);
-      console.log("✅ Gemini API response received");
-    } catch (geminiError) {
-      console.error("❌ Gemini API Error:", geminiError);
-      console.error("Error details:", JSON.stringify(geminiError, null, 2));
-      return res.status(500).json({ 
-        error: "Failed to generate course content from AI",
-        details: geminiError.message 
+    const maxRetries = 3;
+    let retryCount = 0;
+    let lastError;
+    
+    while (retryCount < maxRetries) {
+      try {
+        console.log(`🔄 Attempt ${retryCount + 1} of ${maxRetries}...`);
+        result = await model.generateContent(prompt);
+        console.log("✅ Gemini API response received");
+        break; // Success! Exit the retry loop
+      } catch (geminiError) {
+        lastError = geminiError;
+        retryCount++;
+        
+        // Check if it's a 503 (overloaded) or rate limit error
+        const isOverloaded = geminiError.message?.includes('503') || 
+                            geminiError.message?.includes('overloaded') ||
+                            geminiError.message?.includes('Service Unavailable');
+        
+        const isRateLimit = geminiError.message?.includes('429') || 
+                           geminiError.message?.includes('rate limit');
+        
+        console.error(`❌ Gemini API Error (Attempt ${retryCount}/${maxRetries}):`, geminiError.message);
+        
+        if ((isOverloaded || isRateLimit) && retryCount < maxRetries) {
+          // Exponential backoff: 2s, 4s, 8s
+          const waitTime = Math.pow(2, retryCount) * 1000;
+          console.log(`⏳ Model is overloaded. Waiting ${waitTime/1000} seconds before retry...`);
+          logToFile(`⏳ Retry ${retryCount}: Waiting ${waitTime/1000}s due to ${isOverloaded ? '503' : '429'} error`);
+          await new Promise(resolve => setTimeout(resolve, waitTime));
+        } else if (retryCount >= maxRetries) {
+          console.error("❌ Max retries reached. Giving up.");
+          logToFile("❌ Max retries reached");
+        } else {
+          // For other errors, don't retry
+          break;
+        }
+      }
+    }
+    
+    // If we exhausted all retries, return error
+    if (!result) {
+      console.error("❌ Failed after all retries:", lastError.message);
+      return res.status(503).json({ 
+        error: "AI service is temporarily overloaded. Please try again in a few moments.",
+        details: "The Gemini API is experiencing high traffic. We've attempted multiple retries but the service is still unavailable.",
+        suggestion: "Please wait 30-60 seconds and try again.",
+        technicalDetails: lastError.message 
       });
     }
 

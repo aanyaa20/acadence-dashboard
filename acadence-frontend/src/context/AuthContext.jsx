@@ -51,18 +51,25 @@ const loginUser = async (email, password) => {
       const currentUser = localStorage.getItem("user");
       
       if (currentToken && currentUser) {
-        const userId = JSON.parse(currentUser).id;
+        const parsedUser = JSON.parse(currentUser);
+        const userId = parsedUser.id || parsedUser._id;
+        
+        console.log("🔄 Refreshing user data for ID:", userId);
+        
         const res = await axios.get(`${API_BASE_URL}/api/users/${userId}`, {
           headers: { Authorization: `Bearer ${currentToken}` }
         });
         
         const updatedUser = res.data;
+        console.log("✅ User refreshed! Points:", updatedUser.totalPoints);
+        
         localStorage.setItem("user", JSON.stringify(updatedUser));
         setUser(updatedUser); // This will trigger re-render
         return updatedUser;
       }
     } catch (error) {
-      console.error("Error refreshing user:", error);
+      console.error("❌ Error refreshing user:", error);
+      console.error("Error details:", error.response?.data);
     }
   };
 

@@ -1,8 +1,10 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 import User from '../models/User.js';
 import { authenticateToken } from '../middleware/auth.js';
+import { sendPasswordResetEmail } from '../config/email.js';
 
 const router = express.Router();
 
@@ -171,6 +173,148 @@ router.put('/password', authenticateToken, async (req, res) => {
 
     res.json({ message: 'Password updated successfully' });
   } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Update profile photo
+router.put('/profile-photo', authenticateToken, async (req, res) => {
+  try {
+    console.log('📸 Profile photo update request received');
+    console.log('User ID from token:', req.user?.userId);
+    console.log('Request body keys:', Object.keys(req.body));
+    
+    const { profilePhoto } = req.body;
+
+    if (!profilePhoto) {
+      console.log('❌ No profile photo provided');
+      return res.status(400).json({ message: 'Profile photo URL is required' });
+    }
+
+    console.log('📸 Updating profile photo for user:', req.user.userId);
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user.userId,
+      { profilePhoto },
+      { new: true, runValidators: true }
+    ).select('-password');
+
+    if (!updatedUser) {
+      console.log('❌ User not found');
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    console.log('✅ Profile photo updated successfully');
+    res.json({
+      message: 'Profile photo updated successfully',
+      user: updatedUser
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Forgot password - Generate reset token
+router.post('/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: 'Email is required' });
+    }
+
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user) {
+      // Don't reveal if user exists or not for security
+      return res.json({ 
+        message: 'If an account with that email exists, a reset code has been generated.',
+        success: true 
+      });
+    }
+
+    // Generate 6-digit reset code
+    const resetToken = Math.floor(100000 + Math.random() * 900000).toString();
+    
+    // Hash the token before saving
+    const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+    
+    // Set token and expiry (15 minutes)
+    user.resetPasswordToken = hashedToken;
+    user.resetPasswordExpires = Date.now() + 15 * 60 * 1000; // 15 minutes
+    await user.save();
+
+    console.log(`🔑 Password reset code for ${email}: ${resetToken}`);
+    
+    // Send email with reset code
+    try {
+      await sendPasswordResetEmail(user.email, resetToken, user.name);
+      console.log(`📧 Reset code sent to ${user.email}`);
+      
+      res.json({
+        message: 'Password reset code has been sent to your email',
+        success: true,
+        email: user.email
+      });
+    } catch (emailError) {
+      console.error('❌ Failed to send email:', emailError);
+      
+      // Return error - email must work
+      res.status(500).json({
+        message: 'Failed to send email. Please try again later.',
+        success: false,
+        error: emailError.message
+      });
+    }
+  } catch (error) {
+    console.error('Error in forgot password:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Reset password with token
+router.post('/reset-password', async (req, res) => {
+  try {
+    const { email, resetCode, newPassword } = req.body;
+
+    if (!email || !resetCode || !newPassword) {
+      return res.status(400).json({ message: 'Email, reset code, and new password are required' });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ message: 'Password must be at least 6 characters' });
+    }
+
+    // Hash the provided token
+    const hashedToken = crypto.createHash('sha256').update(resetCode).digest('hex');
+
+    // Find user with valid token
+    const user = await User.findOne({
+      email: email.toLowerCase(),
+      resetPasswordToken: hashedToken,
+      resetPasswordExpires: { $gt: Date.now() }
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: 'Invalid or expired reset code' });
+    }
+
+    // Hash new password
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+
+    // Update password and clear reset token
+    user.password = hashedPassword;
+    user.resetPasswordToken = null;
+    user.resetPasswordExpires = null;
+    await user.save();
+
+    console.log(`✅ Password reset successful for ${email}`);
+
+    res.json({ 
+      message: 'Password reset successful. You can now log in with your new password.',
+      success: true 
+    });
+  } catch (error) {
+    console.error('Error in reset password:', error);
     res.status(500).json({ message: error.message });
   }
 });

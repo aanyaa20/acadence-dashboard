@@ -19,7 +19,6 @@ export default function DashboardLayout() {
     { to: "/dashboard", label: "Dashboard", icon: <HiOutlineHome /> },
     { to: "/dashboard/courses", label: "My Courses", icon: <HiBookOpen /> },
     { to: "/dashboard/allcourses", label: "All Courses", icon: <HiBookOpen /> },
-    { to: "/dashboard/progress", label: "Progress", icon: <HiChartBar /> },
     { to: "/dashboard/settings", label: "Settings", icon: <HiCog /> },
     
   ];

@@ -228,6 +228,19 @@ export default function Courses() {
         return;
       }
       
+      // Handle 503 Service Overloaded errors specially
+      if (error.response?.status === 503) {
+        const suggestion = error.response?.data?.suggestion || "Please wait a moment and try again.";
+        toast.error(
+          `AI service is busy right now. ${suggestion}`,
+          { duration: 5000 }
+        );
+        console.error("📋 AI Service Overloaded:");
+        console.error("- Suggestion:", error.response.data.suggestion);
+        console.error("- Technical Details:", error.response.data.technicalDetails);
+        return;
+      }
+      
       const errorMessage = error.response?.data?.error 
         || error.response?.data?.details
         || error.response?.data?.message
@@ -260,19 +273,23 @@ export default function Courses() {
   };
 
   return (
-    <div className="bg-slate-900 min-h-screen text-white pt-24 pb-12 px-6">
+    <div className="min-h-screen pt-24 pb-12 px-6" style={{ backgroundColor: 'var(--color-bg-primary)', color: 'var(--color-text-primary)' }}>
       <div className="max-w-7xl mx-auto">
         {/* Header with Generate Button */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-10">
           <div>
-            <h1 className="text-4xl font-bold mb-2 text-indigo-400">All Courses</h1>
-            <p className="text-gray-400">
+            <h1 className="text-4xl font-bold mb-2" style={{ color: 'var(--color-primary)' }}>All Courses</h1>
+            <p style={{ color: 'var(--color-text-secondary)' }}>
               Browse from our top-rated courses and start learning
             </p>
           </div>
           <button
             onClick={() => setIsDialogOpen(true)}
-            className="mt-4 md:mt-0 px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 rounded-lg font-semibold flex items-center gap-2 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+            className="mt-4 md:mt-0 px-6 py-3 rounded-lg font-semibold flex items-center gap-2 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+            style={{
+              background: 'var(--gradient-primary)',
+              color: 'var(--color-text-inverse)'
+            }}
           >
             <FaRobot className="text-xl" />
             Generate AI Course
@@ -283,7 +300,11 @@ export default function Courses() {
           {allCourses.map((course) => (
             <div
               key={course.id}
-              className="bg-slate-800 rounded-xl overflow-hidden shadow-lg hover:scale-105 transform transition flex flex-col h-full"
+              className="rounded-xl overflow-hidden shadow-lg hover:scale-105 transform transition flex flex-col h-full border"
+              style={{
+                backgroundColor: 'var(--color-bg-elevated)',
+                borderColor: 'var(--color-border-light)'
+              }}
             >
               <img
                 src={course.image}
@@ -295,21 +316,21 @@ export default function Courses() {
                 }
               />
               <div className="p-4 flex flex-col flex-1">
-                <h3 className="font-semibold text-lg">{course.title}</h3>
-                <p className="text-gray-400 text-sm mt-1 line-clamp-2">
+                <h3 className="font-semibold text-lg" style={{ color: 'var(--color-text-primary)' }}>{course.title}</h3>
+                <p className="text-sm mt-1 line-clamp-2" style={{ color: 'var(--color-text-secondary)' }}>
                   {course.description}
                 </p>
 
-                <div className="flex items-center gap-2 mt-2 text-yellow-400">
+                <div className="flex items-center gap-2 mt-2" style={{ color: 'var(--color-warning)' }}>
                   {renderStars(course.rating)}
-                  <span className="text-sm text-gray-300 ml-2">
+                  <span className="text-sm ml-2" style={{ color: 'var(--color-text-tertiary)' }}>
                     {course.rating} • {course.learners} learners
                   </span>
                 </div>
 
                 <div className="mt-3 flex items-center gap-3">
-                  <span className="text-indigo-400 font-bold">{course.price}</span>
-                  <span className="text-gray-500 line-through text-sm">
+                  <span className="font-bold" style={{ color: 'var(--color-primary)' }}>{course.price}</span>
+                  <span className="line-through text-sm" style={{ color: 'var(--color-text-tertiary)' }}>
                     {course.oldPrice}
                   </span>
                 </div>
@@ -318,7 +339,11 @@ export default function Courses() {
                   href={course.link ? course.link : "#"}
                   target={course.link ? "_blank" : "_self"}
                   rel="noopener noreferrer"
-                  className="w-full mt-auto py-2 bg-indigo-500 rounded-lg font-semibold hover:bg-indigo-600 text-center block"
+                  className="w-full mt-auto py-2 rounded-lg font-semibold text-center block transition"
+                  style={{
+                    backgroundColor: 'var(--color-primary)',
+                    color: 'var(--color-text-inverse)'
+                  }}
                 >
                   Enroll Now
                 </a>

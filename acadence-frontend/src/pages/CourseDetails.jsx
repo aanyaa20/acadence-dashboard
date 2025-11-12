@@ -14,6 +14,7 @@ import {
   FaYoutube,
   FaCheck,
   FaStar,
+  FaTrash,
 } from "react-icons/fa";
 import toast from "react-hot-toast";
 import { AuthContext } from "../context/AuthContext";
@@ -33,6 +34,7 @@ export default function CourseDetails() {
   const [showQuiz, setShowQuiz] = useState(false);
   const [takingQuiz, setTakingQuiz] = useState(false);
   const [completedLessons, setCompletedLessons] = useState([]);
+  const [showUnenrollModal, setShowUnenrollModal] = useState(false);
 
   useEffect(() => {
     fetchCourseDetails();
@@ -71,9 +73,9 @@ export default function CourseDetails() {
       setLessons(lessonsResponse.data);
       setQuiz(quizResponse.data[0]); // Get first quiz
       
-      // Set completed lessons
+      // Set completed lessons - check if user has completed them
       const completed = lessonsResponse.data
-        .filter(lesson => lesson.completed)
+        .filter(lesson => lesson.completedByCurrentUser || lesson.completed)
         .map(lesson => lesson._id);
       setCompletedLessons(completed);
     } catch (error) {
@@ -85,38 +87,38 @@ export default function CourseDetails() {
     }
   };
 
-  const handleLessonComplete = async (lessonId) => {
+  const handleLessonComplete = async (lessonId, isCurrentlyCompleted) => {
     try {
       const authToken = localStorage.getItem('token');
+      const isCompleting = !isCurrentlyCompleted; // Toggle
+      
       const response = await axios.patch(
         `${API_BASE_URL}/api/lessons/${lessonId}/complete`,
-        {},
+        { isCompleting },
         {
           headers: { Authorization: `Bearer ${authToken}` },
         }
       );
 
-      // Add to completed lessons
-      if (!completedLessons.includes(lessonId)) {
+      // Update completed lessons array
+      if (isCompleting && !completedLessons.includes(lessonId)) {
         setCompletedLessons([...completedLessons, lessonId]);
-        
-        if (response.data.pointsAwarded > 0) {
-          toast.success(`Lesson completed! You earned ${response.data.pointsAwarded} points! `);
-        } else {
-          toast.success("Lesson marked as complete!");
-        }
-        
-        // Refresh course to update progress
-        await fetchCourseDetails();
-        
-        // Refresh user data in context to update points everywhere
-        if (refreshUser) {
-          await refreshUser();
-        }
+        toast.success(`✅ Lesson completed! +${response.data.pointsChange} points!`);
+      } else if (!isCompleting && completedLessons.includes(lessonId)) {
+        setCompletedLessons(completedLessons.filter(id => id !== lessonId));
+        toast.info(`Lesson marked as incomplete. ${response.data.pointsChange} points.`);
+      }
+      
+      // Refresh course to update progress
+      await fetchCourseDetails();
+      
+      // Refresh user data in context to update points and streak everywhere
+      if (refreshUser) {
+        await refreshUser();
       }
     } catch (error) {
-      console.error("Error completing lesson:", error);
-      toast.error(error.response?.data?.message || "Failed to mark lesson as complete");
+      console.error("Error toggling lesson completion:", error);
+      toast.error(error.response?.data?.message || "Failed to update lesson status");
     }
   };
 
@@ -126,15 +128,46 @@ export default function CourseDetails() {
   };
 
   const handleQuizComplete = async (results) => {
-    // Refresh course data to get updated points
-    await fetchCourseDetails();
+    console.log("🎯 Quiz completed! Results:", results);
     
-    // Refresh user data in context to update points everywhere
+    // Show success message with points
+    if (results.pointsAwarded > 0) {
+      toast.success(`Quiz completed! You earned ${results.pointsAwarded} points! (${results.percentage}% score)`, {
+        duration: 5000,
+      });
+    } else if (results.alreadyCompleted) {
+      toast.info(`Quiz already completed. Score: ${results.percentage}%`);
+    } else {
+      toast.success(`Quiz completed with ${results.percentage}% score!`);
+    }
+    
+    // Refresh user data to update points globally
     if (refreshUser) {
+      console.log("🔄 Calling refreshUser...");
       await refreshUser();
     }
     
-    toast.success(`Quiz completed with ${results.percentage}% score!`);
+    // Refresh course data
+    console.log("🔄 Refreshing course details...");
+    await fetchCourseDetails();
+  };
+
+  const handleUnenroll = async () => {
+    try {
+      const authToken = localStorage.getItem('token');
+      await axios.delete(
+        `${API_BASE_URL}/api/courses/${courseId}`,
+        {
+          headers: { Authorization: `Bearer ${authToken}` },
+        }
+      );
+
+      setShowUnenrollModal(false);
+      navigate("/dashboard/allcourses");
+    } catch (error) {
+      console.error("Error unenrolling from course:", error);
+      setShowUnenrollModal(false);
+    }
   };
 
   const toggleLesson = (lessonId) => {
@@ -152,10 +185,13 @@ export default function CourseDetails() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-900 text-white flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={{ 
+        backgroundColor: 'var(--color-bg-primary)', 
+        color: 'var(--color-text-primary)' 
+      }}>
         <div className="text-center">
-          <FaSpinner className="text-6xl text-indigo-400 animate-spin mx-auto mb-4" />
-          <p className="text-xl text-gray-400">Loading course details...</p>
+          <FaSpinner className="text-6xl animate-spin mx-auto mb-4" style={{ color: 'var(--color-primary)' }} />
+          <p className="text-xl" style={{ color: 'var(--color-text-secondary)' }}>Loading course details...</p>
         </div>
       </div>
     );
@@ -163,12 +199,19 @@ export default function CourseDetails() {
 
   if (!course) {
     return (
-      <div className="min-h-screen bg-slate-900 text-white flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={{ 
+        backgroundColor: 'var(--color-bg-primary)', 
+        color: 'var(--color-text-primary)' 
+      }}>
         <div className="text-center">
-          <p className="text-xl text-gray-400">Course not found</p>
+          <p className="text-xl" style={{ color: 'var(--color-text-secondary)' }}>Course not found</p>
           <button
             onClick={() => navigate("/dashboard/allcourses")}
-            className="mt-4 px-6 py-2 bg-indigo-500 rounded-lg hover:bg-indigo-600"
+            className="mt-4 px-6 py-2 rounded-lg transition"
+            style={{
+              backgroundColor: 'var(--color-primary)',
+              color: 'var(--color-text-inverse)'
+            }}
           >
             Back to Courses
           </button>
@@ -178,23 +221,99 @@ export default function CourseDetails() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white pt-24 pb-12 px-6">
-      <div className="max-w-6xl mx-auto">
-        {/* Back Button */}
-        <button
-          onClick={() => navigate("/dashboard/allcourses")}
-          className="flex items-center gap-2 text-gray-400 hover:text-white mb-6 transition"
-        >
-          <FaArrowLeft />
-          Back to All Courses
-        </button>
+    <div className="min-h-screen pt-24 pb-12 px-6" style={{ 
+      backgroundColor: 'var(--color-bg-primary)', 
+      color: 'var(--color-text-primary)' 
+    }}>
+      <div className="max-w-7xl mx-auto">
+        {/* Top Navigation Bar */}
+        <div className="flex items-center justify-between mb-6">
+          <button
+            onClick={() => navigate("/dashboard/allcourses")}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-opacity-10 transition font-semibold"
+            style={{ 
+              color: 'var(--color-text-secondary)'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.color = 'var(--color-text-primary)'}
+            onMouseLeave={(e) => e.currentTarget.style.color = 'var(--color-text-secondary)'}
+          >
+            <FaArrowLeft />
+            Back to All Courses
+          </button>
+
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate("/dashboard")}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl transition-all font-bold shadow-lg hover:shadow-xl"
+              style={{
+                background: 'linear-gradient(135deg, #6d28d9, #4c1d95)',
+                color: '#fff'
+              }}
+            >
+              <FaGraduationCap />
+              Go to Dashboard
+            </button>
+
+            <button
+              onClick={() => setShowUnenrollModal(true)}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl transition-all font-bold border-2 border-red-500/40 text-red-400 hover:bg-red-500/20 shadow-lg"
+            >
+              <FaTrash />
+              Unenroll
+            </button>
+          </div>
+        </div>
+
+        {/* Unenroll Confirmation Modal */}
+        {showUnenrollModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl" style={{
+              backgroundColor: 'var(--color-bg-elevated)',
+              borderColor: 'var(--color-border-light)'
+            }}>
+              <div className="text-center">
+                <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 dark:bg-red-900/30 mb-4">
+                  <FaTrash className="h-8 w-8 text-red-600 dark:text-red-400" />
+                </div>
+                <h3 className="text-2xl font-bold mb-2" style={{ color: 'var(--color-text-primary)' }}>
+                  Unenroll from Course?
+                </h3>
+                <p className="text-base mb-6" style={{ color: 'var(--color-text-secondary)' }}>
+                  Are you sure you want to unenroll from this course? This will delete all your progress and cannot be undone.
+                </p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowUnenrollModal(false)}
+                    className="flex-1 px-6 py-3 rounded-xl font-bold transition-all border-2"
+                    style={{
+                      borderColor: 'var(--color-border-light)',
+                      color: 'var(--color-text-primary)',
+                      backgroundColor: 'var(--color-bg-secondary)'
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleUnenroll}
+                    className="flex-1 px-6 py-3 rounded-xl font-bold transition-all bg-red-600 text-white hover:bg-red-700"
+                  >
+                    Unenroll
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Course Header */}
-        <div className="bg-gradient-to-r from-indigo-600 to-purple-700 rounded-2xl p-8 mb-8 shadow-2xl">
+        <div className="rounded-3xl p-8 mb-8 shadow-2xl border" style={{
+          background: 'linear-gradient(135deg, #6d28d9 0%, #4c1d95 50%, #312e81 100%)',
+          borderColor: 'rgba(109, 40, 217, 0.3)'
+        }}>
           <div className="flex items-start justify-between mb-4">
             <div className="flex-1">
-              <h1 className="text-4xl font-bold mb-2">{course.title}</h1>
-              <p className="text-indigo-100 text-lg mb-4">{course.description}</p>
+              <h1 className="text-4xl font-bold mb-2 text-white drop-shadow-lg">{course.title}</h1>
+              <p className="text-lg mb-4 text-white opacity-95">{course.description}</p>
             </div>
             <span
               className={`px-4 py-2 rounded-full border text-sm font-semibold capitalize ${getDifficultyColor(
@@ -207,25 +326,25 @@ export default function CourseDetails() {
 
           {/* Course Stats */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="flex items-center gap-3 bg-white/10 rounded-lg p-4">
-              <FaBook className="text-2xl text-indigo-200" />
+            <div className="flex items-center gap-3 rounded-lg p-4" style={{ backgroundColor: 'rgba(255,255,255,0.1)' }}>
+              <FaBook className="text-2xl" style={{ color: 'var(--color-text-inverse)', opacity: 0.8 }} />
               <div>
-                <p className="text-sm text-indigo-200">Total Lessons</p>
-                <p className="text-xl font-bold">{course.totalLessons}</p>
+                <p className="text-sm" style={{ color: 'var(--color-text-inverse)', opacity: 0.8 }}>Total Lessons</p>
+                <p className="text-xl font-bold" style={{ color: 'var(--color-text-inverse)' }}>{course.totalLessons}</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 bg-white/10 rounded-lg p-4">
-              <FaClock className="text-2xl text-indigo-200" />
+            <div className="flex items-center gap-3 rounded-lg p-4" style={{ backgroundColor: 'rgba(255,255,255,0.1)' }}>
+              <FaClock className="text-2xl" style={{ color: 'var(--color-text-inverse)', opacity: 0.8 }} />
               <div>
-                <p className="text-sm text-indigo-200">Duration</p>
-                <p className="text-xl font-bold">{course.estimatedDuration}</p>
+                <p className="text-sm" style={{ color: 'var(--color-text-inverse)', opacity: 0.8 }}>Duration</p>
+                <p className="text-xl font-bold" style={{ color: 'var(--color-text-inverse)' }}>{course.estimatedDuration}</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 bg-white/10 rounded-lg p-4">
-              <FaGraduationCap className="text-2xl text-indigo-200" />
+            <div className="flex items-center gap-3 rounded-lg p-4" style={{ backgroundColor: 'rgba(255,255,255,0.1)' }}>
+              <FaGraduationCap className="text-2xl" style={{ color: 'var(--color-text-inverse)', opacity: 0.8 }} />
               <div>
-                <p className="text-sm text-indigo-200">Progress</p>
-                <p className="text-xl font-bold">
+                <p className="text-sm" style={{ color: 'var(--color-text-inverse)', opacity: 0.8 }}>Progress</p>
+                <p className="text-xl font-bold" style={{ color: 'var(--color-text-inverse)' }}>
                   {Math.round((course.completedLessons / course.totalLessons) * 100)}%
                 </p>
               </div>
@@ -234,16 +353,16 @@ export default function CourseDetails() {
 
           {/* Learning Objectives */}
           {course.learningObjectives && course.learningObjectives.length > 0 && (
-            <div className="mt-6">
-              <h3 className="text-xl font-semibold mb-3 flex items-center gap-2">
+            <div className="mt-6 pt-6 border-t" style={{ borderColor: 'rgba(255,255,255,0.2)' }}>
+              <h3 className="text-xl font-semibold mb-4 flex items-center gap-2 text-white">
                 <FaCheckCircle />
                 What You'll Learn
               </h3>
-              <ul className="space-y-2">
+              <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {course.learningObjectives.map((objective, index) => (
                   <li key={index} className="flex items-start gap-2">
-                    <FaCheckCircle className="text-green-400 mt-1 flex-shrink-0" />
-                    <span className="text-indigo-100">{objective}</span>
+                    <FaCheckCircle className="mt-1 flex-shrink-0 text-emerald-300" />
+                    <span className="text-white opacity-90">{objective}</span>
                   </li>
                 ))}
               </ul>
@@ -251,44 +370,77 @@ export default function CourseDetails() {
           )}
         </div>
 
+        {/* Course Completion Banner */}
+        {course.completedLessons === course.totalLessons && course.totalLessons > 0 && (
+          <div className="mb-8 rounded-3xl p-8 text-center shadow-2xl border-2 relative overflow-hidden" style={{
+            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+            borderColor: '#34d399'
+          }}>
+            <div className="text-7xl mb-4">🎉</div>
+            <h2 className="text-4xl font-bold text-white mb-2">Congratulations!</h2>
+            <p className="text-white text-xl mb-4">You've completed all lessons in this course!</p>
+            <button
+              onClick={() => navigate("/dashboard")}
+              className="px-8 py-4 bg-white text-green-600 rounded-xl font-bold hover:bg-gray-100 transition transform hover:scale-105 shadow-xl"
+            >
+               View Your Progress on Dashboard
+            </button>
+          </div>
+        )}
+
         {/* Lessons Section */}
         <div className="mb-8">
-          <h2 className="text-3xl font-bold mb-6 flex items-center gap-3">
-            <FaBook className="text-indigo-400" />
+          <h2 className="text-3xl font-bold mb-8 flex items-center gap-3" style={{ color: 'var(--color-text-primary)' }}>
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-lg" style={{ background: 'linear-gradient(135deg, #6d28d9, #4c1d95)' }}>
+              <FaBook className="text-xl text-white" />
+            </div>
             Course Lessons
           </h2>
 
-          <div className="space-y-4">
+          <div className="space-y-6">
             {lessons.map((lesson, index) => (
               <div
                 key={lesson._id}
-                className="bg-slate-800 rounded-xl overflow-hidden shadow-lg border border-slate-700"
+                className="rounded-2xl overflow-hidden shadow-xl border-2 transition-all hover:shadow-2xl hover:scale-[1.01]"
+                style={{
+                  backgroundColor: 'var(--color-bg-elevated)',
+                  borderColor: completedLessons.includes(lesson._id) ? '#10b981' : 'var(--color-border-light)'
+                }}
               >
                 {/* Lesson Header */}
                 <button
                   onClick={() => toggleLesson(lesson._id)}
-                  className="w-full p-6 flex items-center justify-between hover:bg-slate-750 transition"
+                  className="w-full p-6 flex items-center justify-between transition"
+                  style={{ backgroundColor: 'transparent' }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--color-bg-tertiary)'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                 >
                   <div className="flex items-center gap-4 flex-1">
-                    <div className="w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center font-bold">
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold" style={{
+                      backgroundColor: 'var(--color-primary)',
+                      color: 'var(--color-text-inverse)'
+                    }}>
                       {index + 1}
                     </div>
                     <div className="text-left flex-1">
                       <div className="flex items-center gap-3">
-                        <h3 className="text-xl font-semibold">{lesson.title}</h3>
+                        <h3 className="text-xl font-semibold" style={{ color: 'var(--color-text-primary)' }}>{lesson.title}</h3>
                         {completedLessons.includes(lesson._id) && (
-                          <span className="flex items-center gap-1 text-green-400 text-sm font-semibold bg-green-900/30 px-3 py-1 rounded-full">
+                          <span className="flex items-center gap-1 text-sm font-semibold px-3 py-1 rounded-full" style={{
+                            color: 'var(--color-success)',
+                            backgroundColor: 'var(--color-success-light)'
+                          }}>
                             <FaCheckCircle />
                             Completed
                           </span>
                         )}
                       </div>
-                      <div className="flex items-center gap-4 mt-1 text-sm text-gray-400">
+                      <div className="flex items-center gap-4 mt-1 text-sm" style={{ color: 'var(--color-text-tertiary)' }}>
                         <span className="flex items-center gap-1">
                           <FaClock />
                           {lesson.duration || "30 mins"}
                         </span>
-                        <span className="flex items-center gap-1 text-yellow-400">
+                        <span className="flex items-center gap-1" style={{ color: 'var(--color-warning)' }}>
                           <FaStar />
                           5 points
                         </span>
@@ -296,27 +448,34 @@ export default function CourseDetails() {
                     </div>
                   </div>
                   {expandedLesson === lesson._id ? (
-                    <FaChevronUp className="text-gray-400" />
+                    <FaChevronUp style={{ color: 'var(--color-text-tertiary)' }} />
                   ) : (
-                    <FaChevronDown className="text-gray-400" />
+                    <FaChevronDown style={{ color: 'var(--color-text-tertiary)' }} />
                   )}
                 </button>
 
                 {/* Lesson Content */}
                 {expandedLesson === lesson._id && (
-                  <div className="p-6 pt-0 border-t border-slate-700">
+                  <div className="p-6 pt-0 border-t" style={{ borderColor: 'var(--color-border-light)' }}>
                     {/* YouTube Video Link */}
                     {lesson.videoSearchTerm && (
-                      <div className="mb-6 bg-slate-900/50 rounded-lg p-4 border border-slate-600">
+                      <div className="mb-6 rounded-lg p-4 border" style={{
+                        backgroundColor: 'var(--color-bg-secondary)',
+                        borderColor: 'var(--color-border-light)'
+                      }}>
                         <div className="flex items-center gap-3 mb-3">
-                          <FaYoutube className="text-red-500 text-2xl" />
-                          <h4 className="text-lg font-semibold text-white">Watch Tutorial</h4>
+                          <FaYoutube className="text-2xl" style={{ color: '#FF0000' }} />
+                          <h4 className="text-lg font-semibold" style={{ color: 'var(--color-text-primary)' }}>Watch Tutorial</h4>
                         </div>
                         <a
                           href={getYouTubeEmbedUrl(lesson.videoSearchTerm)}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition"
+                          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg transition"
+                          style={{
+                            backgroundColor: '#FF0000',
+                            color: '#fff'
+                          }}
                         >
                           <FaYoutube />
                           Search: {lesson.videoSearchTerm}
@@ -325,7 +484,11 @@ export default function CourseDetails() {
                     )}
 
                     {/* Lesson Content */}
-                    <div className="max-w-none mb-6 bg-slate-900/30 rounded-lg p-6 border border-slate-700">
+                    <div className="max-w-none mb-6 rounded-lg p-6 border" style={{
+                      backgroundColor: 'var(--color-bg-secondary)',
+                      borderColor: 'var(--color-border-light)',
+                      color: 'var(--color-text-primary)'
+                    }}>
                       <div 
                         className="lesson-content"
                         dangerouslySetInnerHTML={{ 
@@ -337,21 +500,25 @@ export default function CourseDetails() {
                     </div>
 
                     {/* Complete Lesson Button */}
-                    <div className="flex justify-between items-center pt-4 border-t border-slate-600">
-                      <p className="text-sm text-gray-400">
+                    <div className="flex justify-between items-center pt-4 border-t" style={{ borderColor: 'var(--color-border-light)' }}>
+                      <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
                         {completedLessons.includes(lesson._id) 
-                          ? "Great job! You've completed this lesson." 
+                          ? "✅ You've completed this lesson! (Click to mark as incomplete)" 
                           : "Finished reading? Mark this lesson as complete to track your progress."}
                       </p>
-                      {!completedLessons.includes(lesson._id) && (
-                        <button
-                          onClick={() => handleLessonComplete(lesson._id)}
-                          className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-lg font-semibold transition-all transform hover:scale-105 shadow-lg"
-                        >
-                          <FaCheck />
-                          Mark Complete
-                        </button>
-                      )}
+                      <button
+                        onClick={() => handleLessonComplete(lesson._id, completedLessons.includes(lesson._id))}
+                        className="flex items-center gap-2 px-6 py-2.5 rounded-lg font-semibold transition-all transform hover:scale-105 shadow-lg"
+                        style={{
+                          background: completedLessons.includes(lesson._id)
+                            ? 'linear-gradient(to right, #6b7280, #9ca3af)' // Gray for incomplete
+                            : 'linear-gradient(to right, var(--color-success), #10b981)', // Green for complete
+                          color: 'var(--color-text-inverse)'
+                        }}
+                      >
+                        <FaCheck />
+                        {completedLessons.includes(lesson._id) ? 'Mark Incomplete' : 'Mark Complete'}
+                      </button>
                     </div>
                   </div>
                 )}
@@ -362,21 +529,24 @@ export default function CourseDetails() {
 
         {/* Quiz Section */}
         {quiz && (
-          <div className="bg-slate-800 rounded-2xl p-8 border border-slate-700">
+          <div className="rounded-2xl p-8 border" style={{
+            backgroundColor: 'var(--color-bg-elevated)',
+            borderColor: 'var(--color-border-light)'
+          }}>
             {!takingQuiz ? (
               <>
                 <div className="flex items-center justify-between mb-6">
                   <div>
-                    <h2 className="text-3xl font-bold flex items-center gap-3 mb-2">
-                      <FaQuestionCircle className="text-purple-400" />
+                    <h2 className="text-3xl font-bold flex items-center gap-3 mb-2" style={{ color: 'var(--color-text-primary)' }}>
+                      <FaQuestionCircle style={{ color: 'var(--color-accent)' }} />
                       {quiz.title}
                     </h2>
-                    <p className="text-gray-400">{quiz.description}</p>
+                    <p style={{ color: 'var(--color-text-secondary)' }}>{quiz.description}</p>
                     <div className="flex items-center gap-4 mt-3">
-                      <p className="text-indigo-400">
+                      <p style={{ color: 'var(--color-primary)' }}>
                         <strong>Questions:</strong> {quiz.questions.length}
                       </p>
-                      <p className="text-green-400">
+                      <p style={{ color: 'var(--color-success)' }}>
                         <strong>Reward:</strong> 20 Learning Points
                       </p>
                     </div>
@@ -385,7 +555,11 @@ export default function CourseDetails() {
 
                 <button
                   onClick={() => setTakingQuiz(true)}
-                  className="w-full py-4 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 rounded-lg font-semibold text-lg transition-all transform hover:scale-[1.02]"
+                  className="w-full py-4 rounded-lg font-semibold text-lg transition-all transform hover:scale-[1.02]"
+                  style={{
+                    background: 'var(--gradient-primary)',
+                    color: 'var(--color-text-inverse)'
+                  }}
                 >
                   Take Quiz
                 </button>
@@ -394,7 +568,10 @@ export default function CourseDetails() {
               <div>
                 <button
                   onClick={() => setTakingQuiz(false)}
-                  className="flex items-center gap-2 text-gray-400 hover:text-white mb-6 transition"
+                  className="flex items-center gap-2 mb-6 transition"
+                  style={{ color: 'var(--color-text-secondary)' }}
+                  onMouseEnter={(e) => e.currentTarget.style.color = 'var(--color-text-primary)'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = 'var(--color-text-secondary)'}
                 >
                   <FaArrowLeft />
                   Back to Course

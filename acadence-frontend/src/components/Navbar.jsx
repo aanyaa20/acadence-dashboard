@@ -1,7 +1,10 @@
 // src/components/Navbar.jsx
 import { Link, useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
-import { FaChevronDown, FaChevronUp, FaMoon, FaSun } from "react-icons/fa";
+import { useState, useEffect, useContext } from "react";
+import { FaChevronDown, FaChevronUp, FaMoon, FaSun, FaFire, FaInfoCircle, FaEnvelope } from "react-icons/fa";
+import { AuthContext } from "../context/AuthContext";
+import axios from "axios";
+import API_BASE_URL from "../config";
 import logo from "../assets/logo.png";
 import toast from "react-hot-toast";
 
@@ -10,6 +13,8 @@ export default function Navbar() {
   const [theme, setTheme] = useState(() => {
     return localStorage.getItem("theme") || "dark";
   });
+  const [streak, setStreak] = useState(0);
+  const { user } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const token = localStorage.getItem("token");
@@ -19,6 +24,14 @@ export default function Navbar() {
     document.documentElement.setAttribute("data-theme", theme);
     localStorage.setItem("theme", theme);
   }, [theme]);
+
+  // Fetch user streak - use user context to stay in sync
+  useEffect(() => {
+    if (user) {
+      // Get streak directly from user context
+      setStreak(user.currentStreak || 0);
+    }
+  }, [user, user?.currentStreak]); // Re-run when user or currentStreak changes
 
   const toggleTheme = () => {
     setTheme((prevTheme) => (prevTheme === "dark" ? "light" : "dark"));
@@ -50,6 +63,63 @@ export default function Navbar() {
 
       {/* Right Side */}
       <div className="flex items-center space-x-6">
+        {/* Navigation Links */}
+        <div className="hidden md:flex items-center space-x-4">
+          <a
+            href="#about"
+            onClick={(e) => {
+              e.preventDefault();
+              document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' });
+            }}
+            className="flex items-center gap-2 text-sm font-medium transition-colors px-3 py-2 rounded-lg hover:bg-opacity-10 cursor-pointer"
+            style={{ color: 'var(--color-text-secondary)' }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = 'var(--color-primary)';
+              e.currentTarget.style.backgroundColor = 'rgba(147, 51, 234, 0.1)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = 'var(--color-text-secondary)';
+              e.currentTarget.style.backgroundColor = 'transparent';
+            }}
+          >
+            <FaInfoCircle />
+            About
+          </a>
+          <a
+            href="#contact"
+            onClick={(e) => {
+              e.preventDefault();
+              document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });
+            }}
+            className="flex items-center gap-2 text-sm font-medium transition-colors px-3 py-2 rounded-lg hover:bg-opacity-10 cursor-pointer"
+            style={{ color: 'var(--color-text-secondary)' }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = 'var(--color-primary)';
+              e.currentTarget.style.backgroundColor = 'rgba(147, 51, 234, 0.1)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = 'var(--color-text-secondary)';
+              e.currentTarget.style.backgroundColor = 'transparent';
+            }}
+          >
+            <FaEnvelope />
+            Contact
+          </a>
+        </div>
+        {/* Streak Indicator - Only show when logged in */}
+        {token && (
+          <div 
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg shadow-sm transition-all cursor-default"
+            style={{
+              background: 'linear-gradient(135deg, #FB923C 0%, #F97316 100%)',
+            }}
+            title={`${streak} day learning streak! Keep it going!`}
+          >
+            <FaFire className="text-white text-base" />
+            <span className="text-white font-semibold text-sm">{streak}</span>
+          </div>
+        )}
+
         {/* Theme Toggle Button */}
         <button
           onClick={toggleTheme}
@@ -83,14 +153,19 @@ export default function Navbar() {
               onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--color-primary-light)'}
               onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--color-bg-tertiary)'}
             >
-              <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shadow-custom-sm" style={{
-                background: 'var(--gradient-primary)',
-                color: 'var(--color-text-inverse)'
-              }}>
-                A
-              </div>
+              <img
+                src={
+                  user?.profilePhoto ||
+                  `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                    user?.name || "User"
+                  )}&background=9333EA&color=fff&bold=true&size=64`
+                }
+                alt="Profile"
+                className="w-8 h-8 rounded-full shadow-custom-sm object-cover border-2"
+                style={{ borderColor: 'var(--color-primary)' }}
+              />
               <div className="flex flex-col items-start text-left">
-                <span className="font-medium text-sm" style={{ color: 'var(--color-text-primary)' }}>Aanya</span>
+                <span className="font-medium text-sm" style={{ color: 'var(--color-text-primary)' }}>{user?.name || "User"}</span>
                 <span className="text-xs flex items-center gap-1" style={{ color: 'var(--color-success)' }}>
                   <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: 'var(--color-success)' }}></span>
                   Online

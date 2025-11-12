@@ -75,7 +75,7 @@ export default function Progress() {
         
             completed: totalCompleted,
       
-            points: userResponse.data.totalPoints || 0,
+            points: userResponse.data.totalPoints || user?.totalPoints || 0,
           });
 
           setCourses(coursesList);
@@ -90,16 +90,9 @@ export default function Progress() {
     if (user) {
       fetchProgressData();
     }
-  }, [user]);
+  }, [user, user?.totalPoints]); // Refresh when points change
 
   const statsDisplay = [
-    {
-      id: 1,
-     
-      value: loading ? "..." : stats.hours,
-      icon: <FaClock />,
-      desc: "Total learning time",
-    },
     {
       id: 2,
       title: "Lessons Completed",
@@ -135,37 +128,46 @@ export default function Progress() {
   ];
 
   return (
-    <div className="p-8 pt-24 text-white">
+    <div className="p-8 pt-24" style={{ color: 'var(--color-text-primary)' }}>
       {/* Header */}
       <header className="mb-10">
-        <h1 className="text-4xl font-extrabold mb-2 bg-gradient-to-r from-indigo-400 to-blue-400 bg-clip-text text-transparent flex items-center gap-3">
-          <FaChartLine className="text-blue-300" /> Your Progress
+        <h1 className="text-4xl font-extrabold mb-2 flex items-center gap-3" style={{ 
+          background: 'var(--gradient-primary)', 
+          WebkitBackgroundClip: 'text', 
+          WebkitTextFillColor: 'transparent',
+          backgroundClip: 'text'
+        }}>
+          <FaChartLine style={{ color: 'var(--color-primary)' }} /> Your Progress
         </h1>
-        <p className="text-gray-300 text-lg">
+        <p className="text-lg" style={{ color: 'var(--color-text-secondary)' }}>
           Keep going {user?.name || "Learner"}! Here's how far you've come
         </p>
       </header>
 
       {loading ? (
         <div className="flex items-center justify-center py-20">
-          <FaSpinner className="text-6xl text-indigo-400 animate-spin" />
+          <FaSpinner className="text-6xl animate-spin" style={{ color: 'var(--color-primary)' }} />
         </div>
       ) : (
         <>
           {/* StatCards */}
-          <section className="grid md:grid-cols-3 gap-6 mb-12">
+          <section className="grid md:grid-cols-2 gap-6 mb-12">
             {statsDisplay.map((stat) => (
               <div
                 key={stat.id}
-                className="bg-gradient-to-br from-indigo-700 to-blue-900 p-6 rounded-2xl shadow-lg flex items-center gap-4 hover:scale-[1.02] transition"
+                className="p-6 rounded-2xl shadow-lg flex items-center gap-4 hover:scale-[1.02] transition border"
+                style={{
+                  background: 'var(--gradient-primary)',
+                  borderColor: 'var(--color-border-light)'
+                }}
               >
-                <div className="p-4 bg-white/10 rounded-full text-2xl">
+                <div className="p-4 rounded-full text-2xl" style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}>
                   {stat.icon}
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold">{stat.value}</h3>
-                  <p className="text-sm text-indigo-200">{stat.title}</p>
-                  <p className="text-xs text-gray-400">{stat.desc}</p>
+                  <h3 className="text-xl font-bold" style={{ color: 'var(--color-text-inverse)' }}>{stat.value}</h3>
+                  <p className="text-sm" style={{ color: 'var(--color-text-inverse)', opacity: 0.9 }}>{stat.title}</p>
+                  <p className="text-xs" style={{ color: 'var(--color-text-inverse)', opacity: 0.7 }}>{stat.desc}</p>
                 </div>
               </div>
             ))}
@@ -173,29 +175,39 @@ export default function Progress() {
 
           {/* Course Progress */}
           <section className="mb-12">
-            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-              <FaBookOpen className="text-blue-300" /> Course Progress
+            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2" style={{ color: 'var(--color-text-primary)' }}>
+              <FaBookOpen style={{ color: 'var(--color-primary)' }} /> Course Progress
             </h2>
             {courses.length === 0 ? (
-              <div className="bg-slate-800 p-8 rounded-2xl shadow-lg border border-slate-700 text-center">
-                <p className="text-gray-400">No courses started yet. Generate your first course!</p>
+              <div className="p-8 rounded-2xl shadow-lg border text-center" style={{
+                backgroundColor: 'var(--color-bg-elevated)',
+                borderColor: 'var(--color-border-light)'
+              }}>
+                <p style={{ color: 'var(--color-text-secondary)' }}>No courses started yet. Generate your first course!</p>
               </div>
             ) : (
               <div className="grid md:grid-cols-2 gap-6">
                 {courses.map((course) => (
                   <div
                     key={course.id}
-                    className="bg-slate-800 p-6 rounded-2xl shadow-lg border border-slate-700"
+                    className="p-6 rounded-2xl shadow-lg border"
+                    style={{
+                      backgroundColor: 'var(--color-bg-elevated)',
+                      borderColor: 'var(--color-border-light)'
+                    }}
                   >
-                    <h3 className="font-semibold mb-3">{course.title}</h3>
-                    <div className="flex justify-between text-sm text-gray-400 mb-2">
+                    <h3 className="font-semibold mb-3" style={{ color: 'var(--color-text-primary)' }}>{course.title}</h3>
+                    <div className="flex justify-between text-sm mb-2" style={{ color: 'var(--color-text-secondary)' }}>
                       <span>{course.completedLessons} / {course.totalLessons} lessons</span>
                       <span>{course.progress}%</span>
                     </div>
-                    <div className="w-full bg-slate-700 h-3 rounded-full">
+                    <div className="w-full h-3 rounded-full" style={{ backgroundColor: 'var(--color-bg-tertiary)' }}>
                       <div
-                        className="h-3 rounded-full bg-gradient-to-r from-indigo-400 to-blue-500 transition-all duration-500"
-                        style={{ width: `${course.progress}%` }}
+                        className="h-3 rounded-full transition-all duration-500"
+                        style={{ 
+                          background: 'linear-gradient(to right, var(--color-accent), var(--color-primary))',
+                          width: `${course.progress}%` 
+                        }}
                       />
                     </div>
                   </div>
@@ -206,17 +218,21 @@ export default function Progress() {
 
           {/* Achievements */}
           <section>
-            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-              <FaMedal className="text-yellow-400" /> Achievements
+            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2" style={{ color: 'var(--color-text-primary)' }}>
+              <FaMedal style={{ color: 'var(--color-warning)' }} /> Achievements
             </h2>
             <div className="grid md:grid-cols-3 gap-6">
               {achievements.map((ach) => (
                 <div
                   key={ach.id}
-                  className="bg-gradient-to-br from-indigo-800 to-blue-900 p-6 rounded-2xl shadow-lg flex items-center gap-4"
+                  className="p-6 rounded-2xl shadow-lg flex items-center gap-4 border"
+                  style={{
+                    background: 'var(--gradient-primary)',
+                    borderColor: 'var(--color-border-light)'
+                  }}
                 >
                   <div className="text-3xl">{ach.icon}</div>
-                  <h3 className="font-semibold">{ach.title}</h3>
+                  <h3 className="font-semibold" style={{ color: 'var(--color-text-inverse)' }}>{ach.title}</h3>
                 </div>
               ))}
             </div>

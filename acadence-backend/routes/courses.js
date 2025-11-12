@@ -6,6 +6,20 @@ import { authenticateToken } from '../middleware/auth.js';
 
 const router = express.Router();
 
+// Get all courses for the authenticated user (alias route)
+router.get('/user', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id || req.user.userId;
+    const courses = await Course.find({ userId: userId })
+      .populate('userId', 'name email')
+      .sort({ createdAt: -1 });
+
+    res.json(courses);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // Get all courses for the authenticated user
 router.get('/', authenticateToken, async (req, res) => {
   try {

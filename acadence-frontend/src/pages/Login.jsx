@@ -1,6 +1,6 @@
 import React, { useState, useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import toast from "react-hot-toast";
 
 export default function Login() {
@@ -104,6 +104,19 @@ export default function Login() {
         >
           {loading ? "Logging in..." : "Login"}
         </button>
+
+        {/* Forgot Password Link */}
+        <div className="text-center mt-4">
+          <Link
+            to="/forgot-password"
+            className="text-sm transition-colors"
+            style={{ color: 'var(--color-text-secondary)' }}
+            onMouseEnter={(e) => e.currentTarget.style.color = 'var(--color-primary)'}
+            onMouseLeave={(e) => e.currentTarget.style.color = 'var(--color-text-secondary)'}
+          >
+            Forgot your password?
+          </Link>
+        </div>
         
         <p className="mt-6 text-center text-sm" style={{ color: 'var(--color-text-secondary)' }}>
           Don't have an account?{" "}

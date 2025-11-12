@@ -67,12 +67,7 @@ const QuizTaker = ({ quiz, onComplete }) => {
       setResults(response.data);
       setShowResults(true);
       
-      if (response.data.pointsAwarded > 0) {
-        toast.success(`🎉 Quiz completed! You earned ${response.data.pointsAwarded} points!`);
-      } else {
-        toast.success('Quiz submitted successfully!');
-      }
-
+      // Call onComplete callback - parent will handle toast notifications
       if (onComplete) {
         onComplete(response.data);
       }
