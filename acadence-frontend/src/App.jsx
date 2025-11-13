@@ -36,6 +36,16 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+        
+        {/* ✅ Protected Quiz route */}
+        <Route
+          path="/course/:courseId/quiz"
+          element={
+            <ProtectedRoute>
+              <CourseDetails showQuizOnly={true} />
+            </ProtectedRoute>
+          }
+        />
 
         {/* ✅ Protected Dashboard routes */}
         <Route

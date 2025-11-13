@@ -52,8 +52,7 @@ export default function GenerateCourseDialog({ isOpen, onClose, onGenerate, isGe
         {/* Close Button */}
         <button
           onClick={onClose}
-          disabled={isGenerating}
-          className="absolute top-4 right-4 transition disabled:opacity-50"
+          className="absolute top-4 right-4 transition hover:scale-110"
           style={{ color: "var(--color-text-tertiary)" }}
           onMouseEnter={(e) => (e.currentTarget.style.color = "var(--color-text-primary)")}
           onMouseLeave={(e) => (e.currentTarget.style.color = "var(--color-text-tertiary)")}
@@ -200,21 +199,6 @@ export default function GenerateCourseDialog({ isOpen, onClose, onGenerate, isGe
             </button>
           </div>
         </form>
-
-        {/* Info */}
-        {isGenerating && (
-          <div
-            className="mt-4 p-3 border rounded-lg"
-            style={{
-              backgroundColor: "var(--color-primary-light)",
-              borderColor: "var(--color-primary)",
-            }}
-          >
-            <p className="text-sm text-center" style={{ color: "var(--color-text-primary)" }}>
-              🤖 AI is creating your course... This may take 10–30 seconds
-            </p>
-          </div>
-        )}
       </div>
 
       <style>{`
@@ -230,21 +214,6 @@ export default function GenerateCourseDialog({ isOpen, onClose, onGenerate, isGe
         }
         .animate-scale-in {
           animation: scale-in 0.2s ease-out;
-        }
-
-        /* 💜 Ultra-soft pastel violet palette */
-        :root {
-          --color-primary: #C8A2FF;
-          --color-primary-hover: #B388FF;
-          --color-primary-light: #F4EAFF;
-          --color-accent: #D8B4FE;
-        }
-
-        [data-theme="dark"] {
-          --color-primary: #B799FF;
-          --color-primary-hover: #A985FF;
-          --color-primary-light: #4C1D95;
-          --color-accent: #C4B5FD;
         }
       `}</style>
     </div>

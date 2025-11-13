@@ -196,7 +196,7 @@ export default function Settings() {
                   user?.profilePhoto ||
                   `https://ui-avatars.com/api/?name=${encodeURIComponent(
                     user?.name || "User"
-                  )}&background=9333EA&color=fff&bold=true&size=128`
+                  )}&background=3B82F6&color=fff&bold=true&size=128`
                 }
                 alt="Profile Avatar"
                 className="w-24 h-24 rounded-full border-4 shadow-lg object-cover"

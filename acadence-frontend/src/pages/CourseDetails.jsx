@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
+import ReactMarkdown from 'react-markdown';
 import {
   FaBook,
   FaClock,
@@ -11,7 +12,6 @@ import {
   FaQuestionCircle,
   FaChevronDown,
   FaChevronUp,
-  FaYoutube,
   FaCheck,
   FaStar,
   FaTrash,
@@ -24,6 +24,7 @@ import QuizTaker from "../components/QuizTaker";
 export default function CourseDetails() {
   const { courseId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { token, refreshUser } = useContext(AuthContext);
 
   const [loading, setLoading] = useState(true);
@@ -36,9 +37,53 @@ export default function CourseDetails() {
   const [completedLessons, setCompletedLessons] = useState([]);
   const [showUnenrollModal, setShowUnenrollModal] = useState(false);
 
+  // Check if we're on the quiz route
+  const isQuizRoute = location.pathname.includes('/quiz');
+
+  // Function to convert HTML-like tags to markdown
+  const convertToMarkdown = (content) => {
+    if (!content) return '';
+    
+    return content
+      // Convert heading tags
+      .replace(/<h1>(.*?)<\/h1>/gi, '# $1\n\n')
+      .replace(/<h2>(.*?)<\/h2>/gi, '## $1\n\n')
+      .replace(/<h3>(.*?)<\/h3>/gi, '### $1\n\n')
+      .replace(/<h4>(.*?)<\/h4>/gi, '#### $1\n\n')
+      .replace(/<h5>(.*?)<\/h5>/gi, '##### $1\n\n')
+      .replace(/<h6>(.*?)<\/h6>/gi, '###### $1\n\n')
+      // Convert bold and italic
+      .replace(/<b>(.*?)<\/b>/gi, '**$1**')
+      .replace(/<strong>(.*?)<\/strong>/gi, '**$1**')
+      .replace(/<i>(.*?)<\/i>/gi, '*$1*')
+      .replace(/<em>(.*?)<\/em>/gi, '*$1*')
+      // Convert line breaks
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<br>/gi, '\n')
+      // Convert lists
+      .replace(/<ul>/gi, '\n')
+      .replace(/<\/ul>/gi, '\n')
+      .replace(/<ol>/gi, '\n')
+      .replace(/<\/ol>/gi, '\n')
+      .replace(/<li>(.*?)<\/li>/gi, '- $1\n')
+      // Convert paragraphs
+      .replace(/<p>(.*?)<\/p>/gi, '$1\n\n')
+      // Remove any remaining HTML tags
+      .replace(/<\/?[^>]+(>|$)/g, '')
+      // Clean up extra newlines
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+  };
+
   useEffect(() => {
     fetchCourseDetails();
   }, [courseId]);
+
+  useEffect(() => {
+    if (isQuizRoute && quiz) {
+      setTakingQuiz(true);
+    }
+  }, [isQuizRoute, quiz]);
 
   const fetchCourseDetails = async () => {
     try {
@@ -135,11 +180,6 @@ export default function CourseDetails() {
       console.error("❌ Full error:", error);
       toast.error(error.response?.data?.message || "Failed to update lesson status");
     }
-  };
-
-  const getYouTubeEmbedUrl = (searchTerm) => {
-    // Create a YouTube search URL
-    return `https://www.youtube.com/results?search_query=${encodeURIComponent(searchTerm)}`;
   };
 
   const handleQuizComplete = async (results) => {
@@ -460,46 +500,32 @@ export default function CourseDetails() {
                 {/* Lesson Content */}
                 {expandedLesson === lesson._id && (
                   <div className="p-6 pt-0 border-t" style={{ borderColor: 'var(--color-border-light)' }}>
-                    {/* YouTube Video Link */}
-                    {lesson.videoSearchTerm && (
-                      <div className="mb-6 rounded-lg p-4 border" style={{
-                        backgroundColor: 'var(--color-bg-secondary)',
-                        borderColor: 'var(--color-border-light)'
-                      }}>
-                        <div className="flex items-center gap-3 mb-3">
-                          <FaYoutube className="text-2xl" style={{ color: '#FF0000' }} />
-                          <h4 className="text-lg font-semibold" style={{ color: 'var(--color-text-primary)' }}>Watch Tutorial</h4>
-                        </div>
-                        <a
-                          href={getYouTubeEmbedUrl(lesson.videoSearchTerm)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg transition"
-                          style={{
-                            backgroundColor: '#FF0000',
-                            color: '#fff'
-                          }}
-                        >
-                          <FaYoutube />
-                          Search: {lesson.videoSearchTerm}
-                        </a>
-                      </div>
-                    )}
-
                     {/* Lesson Content */}
                     <div className="max-w-none mb-6 rounded-lg p-6 border" style={{
                       backgroundColor: 'var(--color-bg-secondary)',
                       borderColor: 'var(--color-border-light)',
                       color: 'var(--color-text-primary)'
                     }}>
-                      <div 
-                        className="lesson-content"
-                        dangerouslySetInnerHTML={{ 
-                          __html: lesson.content.includes('<') 
-                            ? lesson.content 
-                            : `<p>${lesson.content.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>')}</p>`
+                      <ReactMarkdown
+                        components={{
+                          h1: ({node, ...props}) => <h1 style={{color: 'var(--color-text-primary)', fontSize: '2em', fontWeight: 'bold', marginBottom: '1rem'}} {...props} />,
+                          h2: ({node, ...props}) => <h2 style={{color: 'var(--color-text-primary)', fontSize: '1.5em', fontWeight: 'bold', marginBottom: '0.75rem', marginTop: '1.5rem'}} {...props} />,
+                          h3: ({node, ...props}) => <h3 style={{color: 'var(--color-text-primary)', fontSize: '1.25em', fontWeight: 'bold', marginBottom: '0.5rem', marginTop: '1rem'}} {...props} />,
+                          p: ({node, ...props}) => <p style={{color: 'var(--color-text-primary)', marginBottom: '1rem', lineHeight: '1.7'}} {...props} />,
+                          ul: ({node, ...props}) => <ul style={{color: 'var(--color-text-primary)', marginLeft: '1.5rem', marginBottom: '1rem', listStyleType: 'disc'}} {...props} />,
+                          ol: ({node, ...props}) => <ol style={{color: 'var(--color-text-primary)', marginLeft: '1.5rem', marginBottom: '1rem', listStyleType: 'decimal'}} {...props} />,
+                          li: ({node, ...props}) => <li style={{color: 'var(--color-text-primary)', marginBottom: '0.5rem'}} {...props} />,
+                          code: ({node, inline, ...props}) => 
+                            inline 
+                              ? <code style={{backgroundColor: 'rgba(99, 102, 241, 0.1)', padding: '0.2em 0.4em', borderRadius: '3px', color: '#60A5FA', fontSize: '0.9em'}} {...props} />
+                              : <code style={{display: 'block', backgroundColor: 'var(--color-bg-tertiary)', padding: '1rem', borderRadius: '0.5rem', color: 'var(--color-text-primary)', fontSize: '0.9em', overflowX: 'auto', marginBottom: '1rem'}} {...props} />,
+                          strong: ({node, ...props}) => <strong style={{color: 'var(--color-primary)', fontWeight: 'bold'}} {...props} />,
+                          em: ({node, ...props}) => <em style={{color: 'var(--color-text-secondary)', fontStyle: 'italic'}} {...props} />,
+                          blockquote: ({node, ...props}) => <blockquote style={{borderLeft: '4px solid var(--color-primary)', paddingLeft: '1rem', marginLeft: '0', marginBottom: '1rem', color: 'var(--color-text-secondary)', fontStyle: 'italic'}} {...props} />,
                         }}
-                      />
+                      >
+                        {convertToMarkdown(lesson.content)}
+                      </ReactMarkdown>
                     </div>
 
                     {/* Complete Lesson Button - Only show if not completed */}
@@ -565,7 +591,7 @@ export default function CourseDetails() {
                 </div>
 
                 <button
-                  onClick={() => setTakingQuiz(true)}
+                  onClick={() => navigate(`/course/${courseId}/quiz`)}
                   className="w-full py-4 rounded-lg font-semibold text-lg transition-all transform hover:scale-[1.02]"
                   style={{
                     background: 'var(--gradient-primary)',

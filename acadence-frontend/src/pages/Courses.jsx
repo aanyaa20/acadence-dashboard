@@ -95,6 +95,68 @@ export default function Courses() {
         </p>
       </header>
 
+      {/* Empty State */}
+      {generatedCourses.length === 0 && (
+        <div className="flex flex-col items-center justify-center py-20">
+          <div 
+            className="w-32 h-32 rounded-full flex items-center justify-center mb-6"
+            style={{ 
+              background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 51, 234, 0.1) 100%)',
+              border: '2px dashed var(--color-border-light)'
+            }}
+          >
+            <FaGraduationCap className="text-6xl" style={{ color: 'var(--color-primary)' }} />
+          </div>
+          
+          <h2 
+            className="text-2xl font-bold mb-3"
+            style={{ color: 'var(--color-text-primary)' }}
+          >
+            No Courses Yet
+          </h2>
+          
+          <p 
+            className="text-center mb-8 max-w-md"
+            style={{ color: 'var(--color-text-secondary)' }}
+          >
+            Start your learning journey by creating your first AI-generated course or browsing available courses.
+          </p>
+          
+          <div className="flex gap-4">
+            <button
+              onClick={() => navigate('/dashboard/allcourses')}
+              className="px-6 py-3 rounded-lg font-semibold transition-all shadow-lg hover:shadow-xl hover:scale-105"
+              style={{
+                background: 'var(--gradient-primary)',
+                color: 'var(--color-text-inverse)'
+              }}
+            >
+              Browse All Courses
+            </button>
+            
+            <button
+              onClick={() => navigate('/dashboard/allcourses#generate')}
+              className="px-6 py-3 rounded-lg font-semibold transition-all border-2 hover:scale-105"
+              style={{
+                backgroundColor: 'transparent',
+                color: 'var(--color-primary)',
+                borderColor: 'var(--color-primary)'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'var(--color-primary)';
+                e.currentTarget.style.color = 'var(--color-text-inverse)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+                e.currentTarget.style.color = 'var(--color-primary)';
+              }}
+            >
+              Generate AI Course
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* AI Generated Courses Section */}
       {generatedCourses.length > 0 && (
         <div className="mb-12">

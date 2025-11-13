@@ -33,7 +33,9 @@ export default function DashboardLayout() {
       {/* Hamburger Toggle - Always Visible */}
       <button
         onClick={() => setOpen(!open)}
-        className="fixed top-20 left-4 z-50 p-3 rounded-lg shadow-lg transition-all hover:scale-110"
+        className={`fixed top-5 z-50 p-3 rounded-lg shadow-lg transition-all hover:scale-110 ${
+          open ? 'left-[270px]' : 'left-4'
+        }`}
         style={{
           backgroundColor: 'var(--color-bg-elevated)',
           color: 'var(--color-text-primary)',
