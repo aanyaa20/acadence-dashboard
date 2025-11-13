@@ -10,7 +10,6 @@ import {
   HiCog,
   HiLogout,
 } from "react-icons/hi";
-import { FaEnvelope } from "react-icons/fa";
 
 export default function DashboardLayout() {
   const [open, setOpen] = useState(true);
@@ -20,9 +19,7 @@ export default function DashboardLayout() {
     { to: "/dashboard", label: "Dashboard", icon: <HiOutlineHome /> },
     { to: "/dashboard/courses", label: "My Courses", icon: <HiBookOpen /> },
     { to: "/dashboard/allcourses", label: "All Courses", icon: <HiBookOpen /> },
-    { to: "/dashboard/contact", label: "Contact Us", icon: <FaEnvelope /> },
     { to: "/dashboard/settings", label: "Settings", icon: <HiCog /> },
-    
   ];
 
   function signOut() {
