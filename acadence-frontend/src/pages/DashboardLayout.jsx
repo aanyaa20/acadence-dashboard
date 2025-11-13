@@ -10,6 +10,7 @@ import {
   HiCog,
   HiLogout,
 } from "react-icons/hi";
+import { FaEnvelope } from "react-icons/fa";
 
 export default function DashboardLayout() {
   const [open, setOpen] = useState(true);
@@ -19,6 +20,7 @@ export default function DashboardLayout() {
     { to: "/dashboard", label: "Dashboard", icon: <HiOutlineHome /> },
     { to: "/dashboard/courses", label: "My Courses", icon: <HiBookOpen /> },
     { to: "/dashboard/allcourses", label: "All Courses", icon: <HiBookOpen /> },
+    { to: "/dashboard/contact", label: "Contact Us", icon: <FaEnvelope /> },
     { to: "/dashboard/settings", label: "Settings", icon: <HiCog /> },
     
   ];
@@ -31,11 +33,25 @@ export default function DashboardLayout() {
 
   return (
     <div className="flex min-h-screen" style={{ backgroundColor: 'var(--color-bg-secondary)' }}>
+      {/* Hamburger Toggle - Always Visible */}
+      <button
+        onClick={() => setOpen(!open)}
+        className="fixed top-20 left-4 z-50 p-3 rounded-lg shadow-lg transition-all hover:scale-110"
+        style={{
+          backgroundColor: 'var(--color-bg-elevated)',
+          color: 'var(--color-text-primary)',
+          border: '1px solid var(--color-border-light)'
+        }}
+        aria-label="Toggle sidebar"
+      >
+        <HiMenuAlt2 className="text-2xl" />
+      </button>
+
       {/* Sidebar */}
       <aside
-        className={`flex flex-col transition-all duration-300 ${
-          open ? "w-64" : "w-20"
-        } border-r`}
+        className={`flex flex-col transition-all duration-300 fixed z-40 h-screen top-0 left-0 ${
+          open ? "w-64" : "w-0 lg:w-20"
+        } border-r overflow-hidden`}
         style={{
           backgroundColor: 'var(--color-bg-primary)',
           borderColor: 'var(--color-border-light)',
@@ -82,6 +98,12 @@ export default function DashboardLayout() {
               key={m.to}
               to={m.to}
               end={m.to === "/dashboard"}
+              onClick={() => {
+                // Close sidebar on mobile when menu item is clicked
+                if (window.innerWidth < 1024) {
+                  setOpen(false);
+                }
+              }}
             >
               {({ isActive }) => (
                 <div
@@ -132,11 +154,19 @@ export default function DashboardLayout() {
       </aside>
 
       {/* Main content */}
-      <main className="flex-1" style={{ backgroundColor: 'var(--color-bg-secondary)' }}>
+      <main className={`flex-1 transition-all duration-300 ${open ? 'ml-64' : 'ml-0 lg:ml-20'}`} style={{ backgroundColor: 'var(--color-bg-secondary)' }}>
         <div className="p-8 pt-24">
           <Outlet />
         </div>
       </main>
+
+      {/* Overlay for mobile when sidebar is open */}
+      {open && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
+          onClick={() => setOpen(false)}
+        />
+      )}
     </div>
   );
 }

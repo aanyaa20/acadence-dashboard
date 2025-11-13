@@ -15,11 +15,11 @@
   --color-text-muted: #6B6E84;        /* Very soft gray */
   --color-text-inverse: #13151F;      /* Dark for light backgrounds */
   
-  /* Brand Colors - Purple & Cyan (Modern & Vibrant) */
-  --color-primary: #9333EA;           /* Vibrant purple - balanced */
-  --color-primary-hover: #7C3AED;     /* Darker purple hover */
-  --color-primary-light: #3730A3;     /* Dark purple tint */
-  --color-primary-dark: #6D28D9;      /* Deep purple */
+  /* Brand Colors - Professional Blue & Cyan (Modern & Clean) */
+  --color-primary: #2563EB;           /* Professional blue - balanced */
+  --color-primary-hover: #1D4ED8;     /* Deeper blue hover */
+  --color-primary-light: #1E3A8A;     /* Dark blue tint */
+  --color-primary-dark: #1E40AF;      /* Deep blue */
   
   --color-secondary: #22D3EE;         /* Brighter cyan */
   --color-secondary-hover: #06B6D4;   /* Medium cyan */
@@ -27,8 +27,8 @@
   --color-secondary-dark: #0891B2;    /* Deep cyan */
   
   /* Accent & Status Colors */
-  --color-accent: #A855F7;            /* Balanced purple accent */
-  --color-accent-hover: #9333EA;
+  --color-accent: #3B82F6;            /* Balanced blue accent */
+  --color-accent-hover: #2563EB;
   
   --color-success: #10B981;           /* Fresh green */
   --color-success-light: #1A3A2E;
@@ -51,12 +51,12 @@
   --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.6), 0 10px 10px -5px rgba(0, 0, 0, 0.4);
   --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
   
-  /* Gradient Colors - Vibrant & Modern */
-  --gradient-primary: linear-gradient(135deg, #9333EA 0%, #A855F7 100%);
-  --gradient-secondary: linear-gradient(135deg, #22D3EE 0%, #9333EA 100%);
-  --gradient-soft: linear-gradient(135deg, #3730A3 0%, #4C1D95 100%);
+  /* Gradient Colors - Professional & Modern */
+  --gradient-primary: linear-gradient(135deg, #2563EB 0%, #3B82F6 100%);
+  --gradient-secondary: linear-gradient(135deg, #22D3EE 0%, #2563EB 100%);
+  --gradient-soft: linear-gradient(135deg, #1E3A8A 0%, #1E40AF 100%);
   --gradient-warm: linear-gradient(135deg, #20233A 0%, #1A1D29 100%);
-  --gradient-vibrant: linear-gradient(135deg, #9333EA 0%, #22D3EE 100%);
+  --gradient-vibrant: linear-gradient(135deg, #2563EB 0%, #22D3EE 100%);
   
   /* Spacing System */
   --spacing-xs: 0.25rem;
@@ -95,7 +95,7 @@
   --color-text-inverse: #FFFFFF;      /* White for dark backgrounds */
   
   /* Brand Colors remain the same but adjust light versions */
-  --color-primary-light: #EDE9FE;     /* Light purple tint */
+  --color-primary-light: #DBEAFE;     /* Light blue tint */
   --color-secondary-light: #CFFAFE;   /* Light cyan tint */
   
   /* Status Colors Light */
@@ -117,11 +117,11 @@
   --shadow-2xl: 0 25px 50px -12px rgba(44, 36, 22, 0.15);
   
   /* Gradients for light mode - Better contrast */
-  --gradient-primary: linear-gradient(135deg, #9333EA 0%, #A855F7 100%);
-  --gradient-secondary: linear-gradient(135deg, #22D3EE 0%, #9333EA 100%);
-  --gradient-soft: linear-gradient(135deg, #FAF8F3 0%, #EDE9FE 100%);
+  --gradient-primary: linear-gradient(135deg, #2563EB 0%, #3B82F6 100%);
+  --gradient-secondary: linear-gradient(135deg, #22D3EE 0%, #2563EB 100%);
+  --gradient-soft: linear-gradient(135deg, #FAF8F3 0%, #DBEAFE 100%);
   --gradient-warm: linear-gradient(135deg, #FAF8F3 0%, #F5F1E8 100%);
-  --gradient-vibrant: linear-gradient(135deg, #9333EA 0%, #22D3EE 100%);
+  --gradient-vibrant: linear-gradient(135deg, #2563EB 0%, #22D3EE 100%);
 }
 
 /* ===== TAILWIND CUSTOM UTILITIES ===== */

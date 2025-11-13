@@ -167,7 +167,7 @@ export default function ChatbotFloating() {
             <div className="flex items-center gap-3">
               <FaRobot className="w-7 h-7" />
               <div>
-                <div className="font-bold text-lg">Asky</div>
+                <div className="font-bold text-lg">LearnBot</div>
                 <div className="text-xs opacity-90">Your Learning Assistant</div>
               </div>
             </div>

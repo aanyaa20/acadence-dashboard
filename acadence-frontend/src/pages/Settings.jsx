@@ -25,6 +25,7 @@ export default function Settings() {
   const [photoPreview, setPhotoPreview] = useState(null);
 
   // Password change state
+  const [showPasswordSection, setShowPasswordSection] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -97,7 +98,7 @@ export default function Settings() {
     }
   };
 
-  const handlePasswordUpdate = () => {
+  const handlePasswordUpdate = async () => {
     if (!currentPassword || !newPassword || !confirmPassword) {
       toast.error("Please fill in all password fields");
       return;
@@ -113,11 +114,28 @@ export default function Settings() {
       return;
     }
 
-    // Here you would call your API to update password
-    toast.success("Password updated successfully!");
-    setCurrentPassword("");
-    setNewPassword("");
-    setConfirmPassword("");
+    try {
+      const authToken = localStorage.getItem('token');
+      
+      await axios.put(
+        `${API_BASE_URL}/api/users/password`,
+        { 
+          currentPassword, 
+          newPassword 
+        },
+        {
+          headers: { Authorization: `Bearer ${authToken}` },
+        }
+      );
+
+      toast.success("Password updated successfully!");
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (error) {
+      console.error("Error updating password:", error);
+      toast.error(error.response?.data?.message || "Failed to update password");
+    }
   };
 
   const handleNotificationSave = () => {
@@ -270,17 +288,31 @@ export default function Settings() {
             borderColor: "var(--color-border-light)",
           }}
         >
-          <div className="flex items-center gap-2 mb-4">
-            <FaLock style={{ color: "var(--color-primary)" }} />
-            <h2
-              className="text-lg font-semibold"
-              style={{ color: "var(--color-text-primary)" }}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <FaLock style={{ color: "var(--color-primary)" }} />
+              <h2
+                className="text-lg font-semibold"
+                style={{ color: "var(--color-text-primary)" }}
+              >
+               Change Password
+              </h2>
+            </div>
+            <button
+              onClick={() => setShowPasswordSection(!showPasswordSection)}
+              className="px-4 py-2 rounded-lg font-medium transition-all border"
+              style={{
+                borderColor: "var(--color-border-light)",
+                color: "var(--color-primary)",
+                backgroundColor: showPasswordSection ? "var(--color-primary-light)" : "transparent"
+              }}
             >
-              Change Password
-            </h2>
+              {showPasswordSection ? "Cancel" : "Change Password"}
+            </button>
           </div>
 
-          <div className="space-y-4">
+          {showPasswordSection && (
+            <div className="space-y-4 animate-fadeIn">
             {/* Current Password */}
             <div>
               <label
@@ -410,6 +442,7 @@ export default function Settings() {
               <FaCheck /> Update Password
             </button>
           </div>
+          )}
         </div>
       </div>
     </div>

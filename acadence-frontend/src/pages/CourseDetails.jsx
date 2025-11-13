@@ -78,6 +78,7 @@ export default function CourseDetails() {
         .filter(lesson => lesson.completedByCurrentUser || lesson.completed)
         .map(lesson => lesson._id);
       setCompletedLessons(completed);
+      
     } catch (error) {
       console.error("Error fetching course details:", error);
       toast.error("Failed to load course details");
@@ -248,7 +249,7 @@ export default function CourseDetails() {
               onClick={() => navigate("/dashboard")}
               className="flex items-center gap-2 px-5 py-2.5 rounded-xl transition-all font-bold shadow-lg hover:shadow-xl"
               style={{
-                background: 'linear-gradient(135deg, #6d28d9, #4c1d95)',
+                background: 'linear-gradient(135deg, #1E40AF, #1E3A8A)',
                 color: '#fff'
               }}
             >
@@ -309,8 +310,8 @@ export default function CourseDetails() {
 
         {/* Course Header */}
         <div className="rounded-3xl p-8 mb-8 shadow-2xl border" style={{
-          background: 'linear-gradient(135deg, #6d28d9 0%, #4c1d95 50%, #312e81 100%)',
-          borderColor: 'rgba(109, 40, 217, 0.3)'
+          background: 'linear-gradient(135deg, #2563EB 0%, #1E40AF 50%, #1E3A8A 100%)',
+          borderColor: 'rgba(37, 99, 235, 0.3)'
         }}>
           <div className="flex items-start justify-between mb-4">
             <div className="flex-1">
@@ -393,7 +394,7 @@ export default function CourseDetails() {
         {/* Lessons Section */}
         <div className="mb-8">
           <h2 className="text-3xl font-bold mb-8 flex items-center gap-3" style={{ color: 'var(--color-text-primary)' }}>
-            <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-lg" style={{ background: 'linear-gradient(135deg, #6d28d9, #4c1d95)' }}>
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-lg" style={{ background: 'linear-gradient(135deg, #1E40AF, #1E3A8A)' }}>
               <FaBook className="text-xl text-white" />
             </div>
             Course Lessons

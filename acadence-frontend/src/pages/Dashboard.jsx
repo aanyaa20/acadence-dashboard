@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from "react";
+import React, { useEffect, useState, useContext, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
@@ -6,6 +6,8 @@ import axios from "axios";
 import API_BASE_URL from "../config";
 import ChatbotFloating from "../components/ChatbotFloating";
 import { AuthContext } from "../context/AuthContext";
+import CalendarCurrent from "../components/CalendarCurrent";
+import confetti from "canvas-confetti";
 import {
   LineChart,
   Line,
@@ -36,6 +38,8 @@ export default function Dashboard() {
   });
   const [recs, setRecs] = useState([]);
   const [recsLoading, setRecsLoading] = useState(false);
+  const previousStreakRef = useRef(0);
+  const [animatedProgress, setAnimatedProgress] = useState(0);
 
   // Function to fetch AI-powered recommendations
   const fetchRecommendations = async () => {
@@ -197,6 +201,89 @@ export default function Dashboard() {
     return () => clearInterval(intervalId);
   }, [user, refreshUser]);
 
+  // Confetti celebration function
+  const celebrateStreak = (streak) => {
+    const duration = 3000;
+    const animationEnd = Date.now() + duration;
+    const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 9999 };
+
+    const randomInRange = (min, max) => Math.random() * (max - min) + min;
+
+    const interval = setInterval(() => {
+      const timeLeft = animationEnd - Date.now();
+
+      if (timeLeft <= 0) {
+        return clearInterval(interval);
+      }
+
+      const particleCount = 50 * (timeLeft / duration);
+
+      confetti({
+        ...defaults,
+        particleCount,
+        origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
+        colors: ['#F97316', '#FB923C', '#FDBA74', '#2563EB', '#3B82F6']
+      });
+      confetti({
+        ...defaults,
+        particleCount,
+        origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
+        colors: ['#F97316', '#FB923C', '#FDBA74', '#2563EB', '#3B82F6']
+      });
+    }, 250);
+  };
+
+  // Check for streak milestones and trigger confetti
+  useEffect(() => {
+    const currentStreak = streakData.current || 0;
+    const previousStreak = previousStreakRef.current;
+
+    // Milestone thresholds
+    const milestones = [3, 7, 14, 30, 50, 100];
+    
+    if (currentStreak > previousStreak) {
+      // Check if we just hit a milestone
+      const hitMilestone = milestones.some(
+        milestone => currentStreak >= milestone && previousStreak < milestone
+      );
+      
+      if (hitMilestone) {
+        console.log(`🎉 Streak milestone reached: ${currentStreak} days!`);
+        celebrateStreak(currentStreak);
+      }
+    }
+
+    previousStreakRef.current = currentStreak;
+  }, [streakData.current]);
+
+  // Animate progress ring with easing
+  useEffect(() => {
+    if (progress === 0) {
+      setAnimatedProgress(0);
+      return;
+    }
+
+    const duration = 1500; // 1.5 seconds
+    const steps = 60;
+    const stepValue = progress / steps;
+    let currentStep = 0;
+
+    const timer = setInterval(() => {
+      currentStep++;
+      const easeOutQuart = 1 - Math.pow(1 - currentStep / steps, 4);
+      const newProgress = easeOutQuart * progress;
+      
+      setAnimatedProgress(newProgress);
+
+      if (currentStep >= steps) {
+        clearInterval(timer);
+        setAnimatedProgress(progress);
+      }
+    }, duration / steps);
+
+    return () => clearInterval(timer);
+  }, [progress]);
+
   // Calculate current learning streak
   const calculateStreak = () => {
     return streakData.current || 0;
@@ -211,10 +298,10 @@ export default function Dashboard() {
   const getStreakMessage = (streak) => {
     if (streak === 0) return "Start your learning journey today!";
     if (streak < 3) return "Great start! Keep it up!";
-    if (streak < 7) return "You're on fire! 🔥";
+    if (streak < 7) return "You're on fire!";
     if (streak < 14) return "Amazing consistency!";
     if (streak < 30) return "Unstoppable! Keep going!";
-    return "Legendary streak! 🏆";
+    return "Legendary streak!";
   };
 
   // Render calendar heatmap for last 30 days
@@ -324,9 +411,9 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="p-6 pt-20 relative bg-secondary min-h-screen">
+    <div className="p-6 pt-16 relative bg-secondary min-h-screen">
       {/* Welcome Section */}
-      <header className="mb-8 flex justify-between items-start">
+      <header className="mb-6 flex justify-between items-start">
         <div>
           <h1 className="text-3xl font-bold mb-2" style={{
             background: 'var(--gradient-primary)',
@@ -366,11 +453,34 @@ export default function Dashboard() {
           value={loading ? "..." : (user?.totalPoints || stats.points || 0)} 
           icon={<FaStar className="text-2xl" style={{ color: 'var(--color-warning)' }} />} 
         />
-        <StatCard 
-          title="Completed Lessons" 
-          value={loading ? "..." : stats.completed} 
-          icon={<FaBookOpen className="text-2xl" style={{ color: 'var(--color-success)' }} />} 
-        />
+        <div className="rounded-xl p-5 shadow-custom-lg bg-elevated border border-light hover:shadow-custom-xl transition-all duration-300">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-medium" style={{ color: 'var(--color-text-secondary)' }}>Lessons Learned</h3>
+            <FaBookOpen className="text-xl" style={{ color: 'var(--color-success)' }} />
+          </div>
+          <div className="flex items-center gap-4">
+            <div style={{ width: 80, height: 80 }}>
+              <CircularProgressbar
+                value={animatedProgress}
+                text={`${Math.round(animatedProgress)}%`}
+                styles={buildStyles({
+                  textColor: 'var(--color-text-primary)',
+                  pathColor: 'var(--color-success)',
+                  trailColor: 'var(--color-bg-tertiary)',
+                  textSize: '20px',
+                  pathTransitionDuration: 0.5,
+                  pathTransition: 'stroke-dashoffset 0.5s ease-in-out'
+                })}
+              />
+            </div>
+            <div>
+              <div className="text-3xl font-bold" style={{ color: 'var(--color-success)' }}>
+                {loading ? "..." : stats.completed}
+              </div>
+              <div className="text-xs" style={{ color: 'var(--color-text-tertiary)' }}>Completed</div>
+            </div>
+          </div>
+        </div>
       </section>
 
       {/* Panels */}
@@ -380,12 +490,12 @@ export default function Dashboard() {
           {/* 1. Quick Course Access */}
           <div className="rounded-2xl shadow-custom-xl p-6 bg-elevated border border-light">
             <h3 className="text-primary text-xl font-semibold mb-4 flex items-center gap-2">
-              <FaBookOpen className="text-purple-500" /> Continue Learning
+              <FaBookOpen className="text-blue-500" /> Continue Learning
             </h3>
             
             {recentCourses.length === 0 ? (
               <div className="text-center py-6">
-                <div className="text-4xl mb-3">📚</div>
+                <FaBookOpen className="text-5xl mx-auto mb-3" style={{ color: 'var(--color-text-tertiary)' }} />
                 <p className="text-sm mb-4" style={{ color: 'var(--color-text-secondary)' }}>
                   No courses yet. Start your first course!
                 </p>
@@ -410,12 +520,12 @@ export default function Dashboard() {
                       backgroundColor: 'var(--color-bg-tertiary)',
                       borderColor: 'var(--color-border-light)'
                     }}
-                    onClick={() => navigate(`/dashboard/courses/${course._id}`)}
+                    onClick={() => navigate(`/course/${course._id}`)}
                   >
                     <div className="flex items-start gap-3 mb-3">
                       <div className="w-12 h-12 rounded-lg flex items-center justify-center text-xl flex-shrink-0" 
-                        style={{ background: 'linear-gradient(135deg, #6d28d9 0%, #4c1d95 100%)' }}>
-                        📖
+                        style={{ background: 'linear-gradient(135deg, #1E40AF 0%, #1E3A8A 100%)' }}>
+                        <FaBookOpen className="text-white" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <h4 className="text-sm font-semibold mb-1 line-clamp-2" style={{ color: 'var(--color-text-primary)' }}>
@@ -431,7 +541,7 @@ export default function Dashboard() {
                         className="h-2 rounded-full transition-all" 
                         style={{ 
                           width: `${course.totalLessons > 0 ? ((course.completedLessons || 0) / course.totalLessons) * 100 : 0}%`,
-                          background: 'linear-gradient(90deg, #6d28d9 0%, #10b981 100%)'
+                          background: 'linear-gradient(90deg, #2563EB 0%, #10b981 100%)'
                         }}
                       ></div>
                     </div>
@@ -458,7 +568,7 @@ export default function Dashboard() {
           {/* 2. Learning Goals Widget */}
           <div className="rounded-2xl shadow-custom-xl p-6 bg-elevated border border-light">
             <h3 className="text-primary text-xl font-semibold mb-4 flex items-center gap-2">
-              🎯 Weekly Goals
+              <FaCheckCircle /> Weekly Goals
             </h3>
             
             <div className="space-y-4">
@@ -527,151 +637,121 @@ export default function Dashboard() {
             </div>
 
             <div className="mt-4 p-3 rounded-lg text-center" style={{ backgroundColor: 'var(--color-bg-tertiary)' }}>
-              <p className="text-xs font-semibold" style={{ color: 'var(--color-text-secondary)' }}>
-                Keep going! You're making great progress! 💪
-              </p>
-            </div>
-          </div>
-
-          {/* 3. Achievement Badges */}
-          <div className="rounded-2xl shadow-custom-xl p-6 bg-elevated border border-light">
-            <h3 className="text-primary text-xl font-semibold mb-4 flex items-center gap-2">
-              <FaTrophy className="text-yellow-500" /> Achievements
-            </h3>
-            
-            <div className="grid grid-cols-3 gap-3">
-              {/* Badge 1: First Course */}
-              <div className="text-center">
-                <div className={`w-16 h-16 mx-auto rounded-full flex items-center justify-center text-2xl mb-2 transition-all ${
-                  recentCourses.length > 0 ? 'bg-gradient-to-br from-purple-500 to-purple-700 shadow-lg' : 'bg-gray-700 opacity-40'
-                }`}>
-                  {recentCourses.length > 0 ? '🎓' : '🔒'}
-                </div>
-                <p className="text-xs font-medium" style={{ color: recentCourses.length > 0 ? 'var(--color-text-primary)' : 'var(--color-text-tertiary)' }}>
-                  First Course
-                </p>
-              </div>
-
-              {/* Badge 2: Week Streak */}
-              <div className="text-center">
-                <div className={`w-16 h-16 mx-auto rounded-full flex items-center justify-center text-2xl mb-2 transition-all ${
-                  calculateStreak() >= 7 ? 'bg-gradient-to-br from-orange-500 to-red-600 shadow-lg' : 'bg-gray-700 opacity-40'
-                }`}>
-                  {calculateStreak() >= 7 ? '🔥' : '🔒'}
-                </div>
-                <p className="text-xs font-medium" style={{ color: calculateStreak() >= 7 ? 'var(--color-text-primary)' : 'var(--color-text-tertiary)' }}>
-                  Week Streak
-                </p>
-              </div>
-
-              {/* Badge 3: Quiz Master */}
-              <div className="text-center">
-                <div className={`w-16 h-16 mx-auto rounded-full flex items-center justify-center text-2xl mb-2 transition-all ${
-                  (user?.totalPoints || 0) >= 100 ? 'bg-gradient-to-br from-green-500 to-emerald-700 shadow-lg' : 'bg-gray-700 opacity-40'
-                }`}>
-                  {(user?.totalPoints || 0) >= 100 ? '⭐' : '🔒'}
-                </div>
-                <p className="text-xs font-medium" style={{ color: (user?.totalPoints || 0) >= 100 ? 'var(--color-text-primary)' : 'var(--color-text-tertiary)' }}>
-                  Quiz Master
-                </p>
-              </div>
-
-              {/* Badge 4: 10 Lessons */}
-              <div className="text-center">
-                <div className={`w-16 h-16 mx-auto rounded-full flex items-center justify-center text-2xl mb-2 transition-all ${
-                  stats.completed >= 10 ? 'bg-gradient-to-br from-blue-500 to-indigo-700 shadow-lg' : 'bg-gray-700 opacity-40'
-                }`}>
-                  {stats.completed >= 10 ? '📚' : '🔒'}
-                </div>
-                <p className="text-xs font-medium" style={{ color: stats.completed >= 10 ? 'var(--color-text-primary)' : 'var(--color-text-tertiary)' }}>
-                  10 Lessons
-                </p>
-              </div>
-
-              {/* Badge 5: Early Bird */}
-              <div className="text-center">
-                <div className="w-16 h-16 mx-auto rounded-full flex items-center justify-center text-2xl mb-2 bg-gray-700 opacity-40">
-                  🔒
-                </div>
-                <p className="text-xs font-medium" style={{ color: 'var(--color-text-tertiary)' }}>
-                  Early Bird
-                </p>
-              </div>
-
-              {/* Badge 6: Perfectionist */}
-              <div className="text-center">
-                <div className="w-16 h-16 mx-auto rounded-full flex items-center justify-center text-2xl mb-2 bg-gray-700 opacity-40">
-                  🔒
-                </div>
-                <p className="text-xs font-medium" style={{ color: 'var(--color-text-tertiary)' }}>
-                  Perfectionist
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-4 p-3 rounded-lg text-center" style={{ backgroundColor: 'var(--color-bg-tertiary)' }}>
-              <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
-                Unlock badges by completing goals! 🏆
+              <p className="text-xs font-semibold flex items-center justify-center gap-2" style={{ color: 'var(--color-text-secondary)' }}>
+                <FaFire /> Keep going! You're making great progress!
               </p>
             </div>
           </div>
         </div>
 
         {/* Right Column: Learning Streak Tracker */}
-        <div className="lg:col-span-2 rounded-2xl shadow-custom-xl p-6 bg-elevated border border-light">
-          <h3 className="text-primary text-xl font-semibold flex items-center gap-2 mb-5">
-            <FaFire className="text-orange-500" /> Learning Streak
-          </h3>
-          
-          {/* Current Streak Display */}
-          <div className="text-center mb-5 p-5 rounded-xl" style={{ background: 'linear-gradient(135deg, #FB923C 0%, #F97316 50%, #EA580C 100%)' }}>
-            <div className="text-4xl mb-2">🔥</div>
-            <div className="text-4xl font-bold text-white mb-1">
-              {calculateStreak()}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Learning Streak Card */}
+          <div className="rounded-2xl shadow-custom-xl p-3 bg-elevated border border-light h-fit">
+            <h3 className="text-primary text-xs font-semibold flex items-center gap-1.5 mb-2">
+              <FaFire className="text-orange-500 text-sm" /> Learning Streak
+            </h3>
+            
+            {/* Current Streak Display */}
+            <div className="text-center mb-2 p-2 rounded-lg" style={{ background: 'linear-gradient(135deg, #FB923C 0%, #F97316 50%, #EA580C 100%)' }}>
+              <FaFire className="text-lg mb-1 mx-auto" style={{ color: '#FFF' }} />
+              <div className="text-xl font-bold text-white">
+                {calculateStreak()}
+              </div>
+              <div className="text-white text-[9px] font-medium opacity-90">Day Streak</div>
             </div>
-            <div className="text-white text-xs font-medium opacity-90">Day Streak</div>
-            <div className="text-white text-xs mt-2 opacity-80">
-              {getStreakMessage(calculateStreak())}
-            </div>
-          </div>
 
-          {/* Streak Stats */}
-          <div className="grid grid-cols-2 gap-3 mb-5">
-            <div className="p-3 rounded-lg text-center" style={{ backgroundColor: 'var(--color-bg-tertiary)' }}>
-              <div className="text-xl font-bold" style={{ color: 'var(--color-primary)' }}>
-                {stats.completed}
-              </div>
-              <div className="text-xs mt-1" style={{ color: 'var(--color-text-secondary)' }}>
-                Total Lessons
-              </div>
-            </div>
-            <div className="p-3 rounded-lg text-center" style={{ backgroundColor: 'var(--color-bg-tertiary)' }}>
-              <div className="text-xl font-bold" style={{ color: '#F97316' }}>
-                {calculateLongestStreak()}
-              </div>
-              <div className="text-xs mt-1" style={{ color: 'var(--color-text-secondary)' }}>
-                Best Streak
-              </div>
-            </div>
-          </div>
+            {/* Modern Calendar Component */}
+        <div className="mt-1.5 p-2 rounded-xl bg-[#1e1f2b] border border-[#2d2f3b]">
+  <h4 className="text-[9px] font-semibold mb-1 uppercase tracking-wide text-gray-400 text-center">
+    Activity Calendar
+  </h4>
+  <div className="flex justify-center">
+    <CalendarCurrent activityLog={streakData.activityLog} />
+  </div>
+</div>
+</div>
 
-          {/* Calendar Heatmap - Last 30 Days */}
-          <div>
-            <h4 className="text-xs font-semibold mb-2 uppercase tracking-wide" style={{ color: 'var(--color-text-secondary)' }}>
-              Activity Calendar
-            </h4>
-            <div className="grid grid-cols-7 gap-1.5 mb-2">
-              {renderCalendarHeatmap()}
-            </div>
-            <div className="flex items-center justify-center gap-2 text-xs" style={{ color: 'var(--color-text-secondary)' }}>
-              <span className="opacity-75">Less</span>
-              <div className="flex gap-1">
-                <div className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: 'var(--color-bg-tertiary)' }}></div>
-                <div className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: 'rgba(251, 146, 60, 0.25)' }}></div>
-                <div className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: 'rgba(249, 115, 22, 0.5)' }}></div>
-                <div className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: '#F97316' }}></div>
+          {/* Achievement Badges */}
+          <div className="rounded-2xl shadow-custom-xl p-4 bg-elevated border border-light">
+            <h3 className="text-primary text-base font-semibold mb-3 flex items-center gap-2">
+              <FaTrophy className="text-yellow-500" /> Achievements
+            </h3>
+            
+            <div className="grid grid-cols-3 gap-3">
+              {/* Badge 1: First Course */}
+              <div className="text-center">
+                <div className={`w-14 h-14 mx-auto rounded-full flex items-center justify-center text-xl mb-1.5 transition-all ${
+                  recentCourses.length > 0 ? 'bg-gradient-to-br from-blue-500 to-blue-700 shadow-lg' : 'bg-gray-700 opacity-40'
+                }`}>
+                  <FaBookOpen className="text-white" />
+                </div>
+                <p className="text-[10px] font-medium" style={{ color: recentCourses.length > 0 ? 'var(--color-text-primary)' : 'var(--color-text-tertiary)' }}>
+                  First Course
+                </p>
               </div>
-              <span className="opacity-75">More</span>
+
+              {/* Badge 2: Week Streak */}
+              <div className="text-center">
+                <div className={`w-14 h-14 mx-auto rounded-full flex items-center justify-center text-xl mb-1.5 transition-all ${
+                  calculateStreak() >= 7 ? 'bg-gradient-to-br from-orange-500 to-red-600 shadow-lg' : 'bg-gray-700 opacity-40'
+                }`}>
+                  <FaFire className="text-white" />
+                </div>
+                <p className="text-[10px] font-medium" style={{ color: calculateStreak() >= 7 ? 'var(--color-text-primary)' : 'var(--color-text-tertiary)' }}>
+                  Week Streak
+                </p>
+              </div>
+
+              {/* Badge 3: Quiz Master */}
+              <div className="text-center">
+                <div className={`w-14 h-14 mx-auto rounded-full flex items-center justify-center text-xl mb-1.5 transition-all ${
+                  (user?.totalPoints || 0) >= 100 ? 'bg-gradient-to-br from-green-500 to-emerald-700 shadow-lg' : 'bg-gray-700 opacity-40'
+                }`}>
+                  <FaStar className="text-white" />
+                </div>
+                <p className="text-[10px] font-medium" style={{ color: (user?.totalPoints || 0) >= 100 ? 'var(--color-text-primary)' : 'var(--color-text-tertiary)' }}>
+                  Quiz Master
+                </p>
+              </div>
+
+              {/* Badge 4: 10 Lessons */}
+              <div className="text-center">
+                <div className={`w-14 h-14 mx-auto rounded-full flex items-center justify-center text-xl mb-1.5 transition-all ${
+                  stats.completed >= 10 ? 'bg-gradient-to-br from-green-500 to-emerald-600 shadow-lg' : 'bg-gray-700 opacity-40'
+                }`}>
+                  <FaBookOpen className="text-white" />
+                </div>
+                <p className="text-[10px] font-medium" style={{ color: stats.completed >= 10 ? 'var(--color-text-primary)' : 'var(--color-text-tertiary)' }}>
+                  10 Lessons
+                </p>
+              </div>
+
+              {/* Badge 5: Early Bird */}
+              <div className="text-center">
+                <div className="w-14 h-14 mx-auto rounded-full flex items-center justify-center text-xl mb-1.5 bg-gray-700 opacity-40">
+                  <FaClock className="text-gray-500" />
+                </div>
+                <p className="text-[10px] font-medium" style={{ color: 'var(--color-text-tertiary)' }}>
+                  Early Bird
+                </p>
+              </div>
+
+              {/* Badge 6: Perfectionist */}
+              <div className="text-center">
+                <div className="w-14 h-14 mx-auto rounded-full flex items-center justify-center text-xl mb-1.5 bg-gray-700 opacity-40">
+                  <FaCheckCircle className="text-gray-500" />
+                </div>
+                <p className="text-[10px] font-medium" style={{ color: 'var(--color-text-tertiary)' }}>
+                  Perfectionist
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-3 p-2 rounded-lg text-center" style={{ backgroundColor: 'var(--color-bg-tertiary)' }}>
+              <p className="text-[10px] font-semibold flex items-center justify-center gap-2" style={{ color: 'var(--color-text-secondary)' }}>
+                <FaTrophy /> Unlock badges by completing goals!
+              </p>
             </div>
           </div>
         </div>

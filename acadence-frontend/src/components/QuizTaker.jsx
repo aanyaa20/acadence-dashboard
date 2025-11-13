@@ -111,7 +111,7 @@ const QuizTaker = ({ quiz, onComplete }) => {
   if (showResults) {
     return (
       <div className="max-w-2xl mx-auto p-6 animate-fadeIn">
-        <div className="bg-gradient-to-br from-purple-900/30 to-blue-900/30 rounded-2xl p-8 border border-purple-500/30">
+        <div className="bg-gradient-to-br from-blue-900/30 to-blue-800/30 rounded-2xl p-8 border border-blue-500/30">
           <div className="text-center mb-8">
             <div className="flex justify-center mb-4">
               <Trophy className="text-yellow-400 w-16 h-16" />
@@ -123,7 +123,7 @@ const QuizTaker = ({ quiz, onComplete }) => {
           <div className="grid grid-cols-2 gap-4 mb-6">
             <div className="bg-gray-800/50 rounded-lg p-4 text-center">
               <div className="flex justify-center mb-2">
-                <Target className="text-purple-400 w-6 h-6" />
+                <Target className="text-blue-400 w-6 h-6" />
               </div>
               <p className="text-gray-400 text-sm mb-1">Your Score</p>
               <p className="text-3xl font-bold text-white">{results.percentage}%</p>
@@ -158,7 +158,7 @@ const QuizTaker = ({ quiz, onComplete }) => {
 
           <div className="space-y-4 mb-6">
             <h3 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
-              <Lightbulb className="w-6 h-6 text-purple-400" />
+              <Lightbulb className="w-6 h-6 text-blue-400" />
               Review Answers
             </h3>
             {quiz.questions.map((question, index) => {
@@ -211,7 +211,7 @@ const QuizTaker = ({ quiz, onComplete }) => {
               setSelectedAnswers({});
               setResults(null);
             }}
-            className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3 rounded-lg font-semibold hover:from-purple-700 hover:to-blue-700 transition-all"
+            className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-blue-800 transition-all"
           >
             Review Questions Again
           </button>
@@ -233,7 +233,7 @@ const QuizTaker = ({ quiz, onComplete }) => {
         </div>
         <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
           <div
-            className="h-full bg-gradient-to-r from-purple-600 to-blue-600 transition-all duration-300"
+            className="h-full bg-gradient-to-r from-blue-600 to-blue-700 transition-all duration-300"
             style={{ width: `${progress}%` }}
           />
         </div>
@@ -294,7 +294,7 @@ const QuizTaker = ({ quiz, onComplete }) => {
               onClick={() => setCurrentQuestion(index)}
               className={`w-3 h-3 rounded-full transition-all ${
                 index === currentQuestion
-                  ? 'bg-purple-600 w-8'
+                  ? 'bg-blue-600 w-8'
                   : selectedAnswers[index]
                   ? 'bg-green-600'
                   : 'bg-gray-600'
@@ -307,14 +307,14 @@ const QuizTaker = ({ quiz, onComplete }) => {
           <button
             onClick={handleSubmit}
             disabled={isSubmitting}
-            className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg font-semibold hover:from-purple-700 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg font-semibold hover:from-blue-700 hover:to-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             {isSubmitting ? 'Submitting...' : 'Submit Quiz'}
           </button>
         ) : (
           <button
             onClick={handleNext}
-            className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg font-semibold hover:from-purple-700 hover:to-blue-700 transition-all"
+            className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg font-semibold hover:from-blue-700 hover:to-blue-800 transition-all"
           >
             Next
           </button>

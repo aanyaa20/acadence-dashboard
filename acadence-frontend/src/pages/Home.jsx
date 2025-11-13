@@ -96,7 +96,7 @@ export default function Home() {
                       {" "}
                       <br />
                       <span style={{
-                        background: 'var(--gradient-vibrant)',
+                        background: 'linear-gradient(135deg, #1E40AF 0%, #3B82F6 100%)',
                         WebkitBackgroundClip: 'text',
                         WebkitTextFillColor: 'transparent',
                         backgroundClip: 'text'
@@ -308,11 +308,11 @@ export default function Home() {
               {/* Step 4 */}
               <div className="flex gap-6 p-6 rounded-2xl border hover:shadow-xl transition-all duration-300" style={{
                 backgroundColor: 'var(--color-bg-elevated)',
-                borderColor: 'var(--color-warning)'
+                borderColor: 'var(--color-accent)'
               }}>
                 <div className="flex-shrink-0">
                   <div className="w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold" style={{
-                    background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                    background: 'linear-gradient(135deg, var(--color-accent), var(--color-primary))',
                     color: 'var(--color-text-inverse)'
                   }}>
                     4
@@ -320,7 +320,7 @@ export default function Home() {
                 </div>
                 <div>
                   <h3 className="text-xl font-bold mb-2 flex items-center gap-2" style={{ color: 'var(--color-text-primary)' }}>
-                    <FaChartLine style={{ color: 'var(--color-warning)' }} />
+                    <FaChartLine style={{ color: 'var(--color-accent)' }} />
                     Track Progress
                   </h3>
                   <p className="leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>

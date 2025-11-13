@@ -78,17 +78,15 @@ export default function Courses() {
     <div className="pt-24 p-8" style={{ color: "var(--color-text-primary)" }}>
       {/* Header */}
       <header className="mb-10">
-        <h1
-          className="text-4xl font-extrabold mb-2 flex items-center gap-3"
-          style={{
-            background: "var(--gradient-primary)",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-            backgroundClip: "text",
-          }}
-        >
-          <FaBookOpen style={{ color: "var(--color-primary)" }} /> My Courses
-        </h1>
+        <div className="flex items-center gap-3 mb-2">
+          <FaBookOpen className="text-4xl" style={{ color: "var(--color-primary)" }} />
+          <h1
+            className="text-4xl font-extrabold"
+            style={{ color: "var(--color-text-primary)" }}
+          >
+            My Courses
+          </h1>
+        </div>
         <p
           className="text-lg"
           style={{ color: "var(--color-text-secondary)" }}
@@ -113,8 +111,8 @@ export default function Courses() {
                 key={course._id}
                 className="rounded-2xl shadow-lg overflow-hidden hover:scale-[1.02] transition cursor-pointer border"
                 style={{
-                  background: "var(--gradient-primary)",
-                  borderColor: "var(--color-border-light)",
+                  background: "linear-gradient(135deg, #1E3A8A 0%, #1E40AF 100%)",
+                  borderColor: "rgba(37, 99, 235, 0.3)",
                 }}
                 onClick={() => navigate(`/course/${course._id}`)}
               >
@@ -224,74 +222,7 @@ export default function Courses() {
         </div>
       )}
 
-      {/* Static Enrolled Courses Section */}
-      <div>
-        <h2
-          className="text-2xl font-bold mb-6 flex items-center gap-2"
-          style={{ color: "var(--color-text-primary)" }}
-        >
-          <FaBookOpen style={{ color: "var(--color-primary)" }} />
-          Enrolled Courses
-        </h2>
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {staticCourses.map((course) => (
-            <div
-              key={course.id}
-              className="rounded-2xl shadow-lg overflow-hidden hover:scale-[1.02] transition border"
-              style={{
-                background: "var(--gradient-primary)",
-                borderColor: "var(--color-border-light)",
-              }}
-            >
-              <img
-                src={course.image}
-                alt={course.title}
-                className="w-full h-40 object-cover"
-              />
-              <div className="p-6">
-                <h3
-                  className="text-xl font-bold mb-2"
-                  style={{ color: "var(--color-text-inverse)" }}
-                >
-                  {course.title}
-                </h3>
-                <div
-                  className="w-full h-3 rounded-full mb-2"
-                  style={{ backgroundColor: "rgba(255,255,255,0.2)" }}
-                >
-                  <div
-                    className="h-3 rounded-full"
-                    style={{
-                      background:
-                        "linear-gradient(to right, var(--color-accent), var(--color-primary))",
-                      width: `${course.progress}%`,
-                    }}
-                  />
-                </div>
-                <p
-                  className="text-sm mb-4"
-                  style={{ color: "var(--color-text-inverse)", opacity: 0.9 }}
-                >
-                  {course.progress}% completed
-                </p>
 
-                <a
-                  href={course.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block px-4 py-2 rounded-lg text-sm font-medium text-center transition"
-                  style={{
-                    backgroundColor: "var(--color-accent)",
-                    color: "var(--color-text-inverse)",
-                  }}
-                >
-                  Continue
-                </a>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
     </div>
   );
 }
