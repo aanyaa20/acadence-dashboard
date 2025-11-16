@@ -61,7 +61,7 @@ JSON format:
       {
         "ques": "Detailed question text testing understanding?",
         "options": ["Option A", "Option B", "Option C", "Option D"],
-        "correctAnswer": "Option B",
+        "answer": "Option B",
         "explanation": "Why this answer is correct (2-3 sentences)"
       }
     ],
@@ -81,7 +81,7 @@ Generate now. Return ONLY the JSON object.`;
 router.post("/", authenticateToken, async (req, res) => {
   const separator = "\n" + "=".repeat(80);
   console.log(separator);
-  console.log("🔥 GENERATE COURSE REQUEST RECEIVED");
+  console.log(" GENERATE COURSE REQUEST RECEIVED");
   console.log("=".repeat(80));
   
   logToFile(separator);
@@ -202,22 +202,65 @@ router.post("/", authenticateToken, async (req, res) => {
       cleanedResponse = cleanedResponse.replace(/```json\s*/gi, "");
       cleanedResponse = cleanedResponse.replace(/```\s*/g, "");
       
-      // Find the first { and last }
+      // Find the first { and extract a balanced JSON substring (handles nested braces)
       const firstBrace = cleanedResponse.indexOf('{');
-      const lastBrace = cleanedResponse.lastIndexOf('}');
-      
-      if (firstBrace === -1 || lastBrace === -1) {
+      if (firstBrace === -1) {
         throw new Error("No valid JSON found in response");
       }
+
+      // Extract balanced JSON by scanning for matching closing brace
+      let braceCount = 0;
+      let endIndex = -1;
+      for (let i = firstBrace; i < cleanedResponse.length; i++) {
+        const ch = cleanedResponse[i];
+        if (ch === '{') braceCount++;
+        else if (ch === '}') braceCount--;
+
+        if (braceCount === 0) {
+          endIndex = i;
+          break;
+        }
+      }
+
+      if (endIndex === -1) {
+        // Couldn't find matching brace - fallback to last '}'
+        const lastBrace = cleanedResponse.lastIndexOf('}');
+        if (lastBrace === -1) throw new Error('No valid JSON end found');
+        endIndex = lastBrace;
+      }
+
+      cleanedResponse = cleanedResponse.substring(firstBrace, endIndex + 1);
       
-      cleanedResponse = cleanedResponse.substring(firstBrace, lastBrace + 1);
-      
+      // Sanitize common issues: smart quotes and trailing commas
+      cleanedResponse = cleanedResponse
+        .replace(/[\u2018\u2019]/g, "'")
+        .replace(/[\u201C\u201D]/g, '"')
+        // remove trailing commas before } or ]
+        .replace(/,\s*}/g, '}')
+        .replace(/,\s*]/g, ']');
+
       console.log("🧹 Cleaned response length:", cleanedResponse.length);
       console.log("🧹 First 300 chars:", cleanedResponse.substring(0, 300));
       
       logToFile("Cleaned response length: " + cleanedResponse.length);
       
-      courseData = JSON.parse(cleanedResponse);
+      // Try JSON.parse; if it fails, attempt a couple more tolerant fixes
+      try {
+        courseData = JSON.parse(cleanedResponse);
+      } catch (e) {
+        // Second attempt: replace unescaped line breaks inside strings with \n
+        const attempt2 = cleanedResponse.replace(/\r\n|\r|\n/g, '\\n');
+
+        // Third attempt: ensure double quotes are used consistently for values in the form "key": 'value'
+        const attempt3 = attempt2.replace(/"\s*:\s*'([^']*)'/g, ': "$1"');
+
+        try {
+          courseData = JSON.parse(attempt3);
+        } catch (e2) {
+          // If still failing, throw original parse error to outer catch
+          throw e2;
+        }
+      }
       console.log("✅ JSON parsed successfully");
       logToFile("✅ JSON parsed successfully");
     } catch (parseError) {
@@ -377,12 +420,36 @@ router.post("/preview", authenticateToken, async (req, res) => {
 
     let courseData;
     try {
-      const cleanedResponse = responseText
+      let cleanedResponse = responseText
         .replace(/```json\s*/g, "")
         .replace(/```\s*/g, "")
         .trim();
-      
-      courseData = JSON.parse(cleanedResponse);
+
+      const firstBrace = cleanedResponse.indexOf('{');
+      if (firstBrace === -1) throw new Error('No JSON found in preview');
+      let braceCount = 0;
+      let endIndex = -1;
+      for (let i = firstBrace; i < cleanedResponse.length; i++) {
+        const ch = cleanedResponse[i];
+        if (ch === '{') braceCount++;
+        else if (ch === '}') braceCount--;
+        if (braceCount === 0) { endIndex = i; break; }
+      }
+      if (endIndex === -1) endIndex = cleanedResponse.lastIndexOf('}');
+      cleanedResponse = cleanedResponse.substring(firstBrace, endIndex + 1);
+
+      cleanedResponse = cleanedResponse
+        .replace(/[\u2018\u2019]/g, "'")
+        .replace(/[\u201C\u201D]/g, '"')
+        .replace(/,\s*}/g, '}')
+        .replace(/,\s*]/g, ']');
+
+      try {
+        courseData = JSON.parse(cleanedResponse);
+      } catch (e) {
+        const attempt2 = cleanedResponse.replace(/\r\n|\r|\n/g, '\\n');
+        courseData = JSON.parse(attempt2);
+      }
     } catch (parseError) {
       console.error("❌ Failed to parse preview response");
       return res.status(500).json({ 
@@ -399,6 +466,149 @@ router.post("/preview", authenticateToken, async (req, res) => {
     console.error("❌ Error previewing course:", error);
     res.status(500).json({ 
       error: "Failed to preview course",
+      details: error.message 
+    });
+  }
+});
+
+// POST /api/generate-course/quick - Quick course generation with template (no AI parsing issues)
+router.post("/quick", authenticateToken, async (req, res) => {
+  try {
+    const { topic, difficulty = "beginner", numberOfLessons = 5 } = req.body;
+    const userId = req.user.id || req.user.userId;
+
+    if (!topic || topic.trim() === "") {
+      return res.status(400).json({ error: "Course topic is required" });
+    }
+
+    console.log(`⚡ Quick generating course: ${topic} for user ${userId}`);
+
+    // Template-based course structure
+    const courseData = {
+      course: {
+        title: `Complete ${topic.charAt(0).toUpperCase() + topic.slice(1)} Course`,
+        topic: topic,
+        description: `Master ${topic} with this comprehensive ${difficulty} level course. Learn fundamental concepts, best practices, and hands-on techniques that will help you build real-world projects.`,
+        difficulty: difficulty,
+        estimatedDuration: `${numberOfLessons * 45} minutes`,
+        learningObjectives: [
+          `Understand core ${topic} concepts and principles`,
+          `Apply ${topic} techniques in practical scenarios`,
+          `Build confidence in ${topic} development`,
+          `Learn industry best practices and patterns`,
+          `Create real-world ${topic} projects`
+        ]
+      },
+      lessons: Array.from({ length: numberOfLessons }, (_, i) => ({
+        title: `${topic.charAt(0).toUpperCase() + topic.slice(1)} - Lesson ${i + 1}`,
+        content: `<h3>Introduction to Lesson ${i + 1}</h3>\n\nThis lesson covers essential concepts in ${topic}. You'll learn key techniques and best practices that are fundamental to mastering this subject.\n\n<h3>Key Concepts</h3>\n<ul>\n<li>Understanding the fundamentals</li>\n<li>Practical applications</li>\n<li>Best practices and patterns</li>\n<li>Real-world examples</li>\n</ul>\n\n<h3>Hands-on Practice</h3>\nApply what you've learned through practical exercises and examples. Focus on building your skills progressively.\n\n<b>Remember:</b> Practice is key to mastering ${topic}. Take your time with each concept and build a strong foundation.`,
+        order: i + 1,
+        points: 20,
+        duration: "45 minutes",
+        videoSearchTerm: `${topic} tutorial lesson ${i + 1}`
+      })),
+      quiz: {
+        title: `${topic.charAt(0).toUpperCase() + topic.slice(1)} Quiz`,
+        description: `Test your knowledge of ${topic} concepts`,
+        questions: [
+          {
+            ques: `What is the most important concept in ${topic}?`,
+            options: ["Understanding fundamentals", "Skipping basics", "Ignoring best practices", "Avoiding practice"],
+            answer: "Understanding fundamentals",
+            explanation: "Building a strong foundation with fundamentals is crucial for success in any subject."
+          },
+          {
+            ques: `How should you approach learning ${topic}?`,
+            options: ["Rush through content", "Practice consistently", "Skip exercises", "Memorize without understanding"],
+            answer: "Practice consistently",
+            explanation: "Consistent practice and hands-on application lead to better retention and mastery."
+          },
+          {
+            ques: `What is essential for mastering ${topic}?`,
+            options: ["Only watching videos", "Reading documentation only", "Hands-on practice", "Avoiding challenges"],
+            answer: "Hands-on practice",
+            explanation: "Practical, hands-on experience is the most effective way to truly master a subject."
+          },
+          {
+            ques: `Why are best practices important in ${topic}?`,
+            options: ["They slow you down", "They ensure quality and maintainability", "They are optional", "They complicate things"],
+            answer: "They ensure quality and maintainability",
+            explanation: "Following best practices leads to better quality work that is easier to maintain and scale."
+          },
+          {
+            ques: `What mindset helps most when learning ${topic}?`,
+            options: ["Give up when stuck", "Avoid asking questions", "Stay curious and persistent", "Only learn surface-level"],
+            answer: "Stay curious and persistent",
+            explanation: "Curiosity and persistence are key traits that help you overcome challenges and achieve mastery."
+          }
+        ],
+        score: 50
+      }
+    };
+
+    // Create course in database
+    const course = new Course({
+      userId,
+      title: courseData.course.title,
+      topic: courseData.course.topic,
+      description: courseData.course.description,
+      difficulty: courseData.course.difficulty,
+      estimatedDuration: courseData.course.estimatedDuration,
+      learningObjectives: courseData.course.learningObjectives,
+      totalLessons: courseData.lessons.length,
+      completedLessons: 0,
+    });
+    await course.save();
+
+    // Create lessons
+    const lessonPromises = courseData.lessons.map((lessonData) => {
+      const lesson = new Lesson({
+        courseId: course._id,
+        title: lessonData.title,
+        content: lessonData.content,
+        order: lessonData.order,
+        points: lessonData.points,
+        duration: lessonData.duration,
+        videoSearchTerm: lessonData.videoSearchTerm,
+        completed: false,
+        completedBy: [],
+      });
+      return lesson.save();
+    });
+    const savedLessons = await Promise.all(lessonPromises);
+
+    // Create quiz
+    const quiz = new Quiz({
+      courseId: course._id,
+      title: courseData.quiz.title,
+      description: courseData.quiz.description,
+      questions: courseData.quiz.questions.map((q) => ({
+        ques: q.ques,
+        options: q.options,
+        correctAnswer: q.answer,
+        explanation: q.explanation,
+      })),
+      score: courseData.quiz.score,
+      attempts: [],
+    });
+    await quiz.save();
+
+    console.log(`✅ Quick course generated successfully: ${course._id}`);
+    
+    res.status(201).json({
+      message: "Course generated successfully",
+      course: {
+        ...course.toObject(),
+        lessonsCount: savedLessons.length,
+        quizId: quiz._id,
+      },
+      lessons: savedLessons,
+      quiz,
+    });
+  } catch (error) {
+    console.error("❌ Error in quick course generation:", error);
+    res.status(500).json({ 
+      error: "Failed to generate course",
       details: error.message 
     });
   }

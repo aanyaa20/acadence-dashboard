@@ -212,6 +212,36 @@ export default function Courses() {
       navigate(`/course/${courseId}`);
     } catch (error) {
       console.error("❌ Error generating course:", error);
+      
+      // Fallback to quick template-based generation if AI fails
+      if (error.response?.status === 500 || error.message?.includes('parse') || error.message?.includes('Network')) {
+        console.log("⚡ Attempting quick template generation...");
+        try {
+          const fallbackResponse = await axios.post(
+            `${API_BASE_URL}/api/generate-course/quick`,
+            {
+              topic: formData.topic,
+              difficulty: formData.difficulty,
+              numberOfLessons: parseInt(formData.numberOfLessons),
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${authToken}`,
+                "Content-Type": "application/json",
+              },
+            }
+          );
+          
+          console.log("✅ Quick course generated successfully!");
+          toast.success("Course generated successfully!");
+          setIsDialogOpen(false);
+          navigate(`/course/${fallbackResponse.data.course._id}`);
+          return;
+        } catch (fallbackError) {
+          console.error("❌ Fallback also failed:", fallbackError);
+        }
+      }
+      
       console.error("Error response:", error.response?.data);
       console.error("Full error response object:", JSON.stringify(error.response?.data, null, 2));
       console.error("Error status:", error.response?.status);
