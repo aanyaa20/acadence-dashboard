@@ -304,6 +304,12 @@ router.patch('/:id/complete', authenticateToken, async (req, res) => {
           user.lastActivityDate = today;
         }
         
+        console.log(`📊 STREAK UPDATE SUMMARY:`);
+        console.log(`   Current Streak: ${user.currentStreak}`);
+        console.log(`   Longest Streak: ${user.longestStreak}`);
+        console.log(`   Last Activity: ${user.lastActivityDate}`);
+        console.log(`   Activity Log Length: ${user.activityLog.length}`);
+        
         await user.save();
         console.log("💾 User saved successfully with new points!");
       } else {
