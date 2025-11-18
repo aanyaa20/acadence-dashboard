@@ -97,7 +97,7 @@ export default function Courses() {
 
       {/* Empty State */}
       {generatedCourses.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-20">
+        <div className="flex flex-col items-center justify-center py-12">
           <div 
             className="w-32 h-32 rounded-full flex items-center justify-center mb-6"
             style={{ 

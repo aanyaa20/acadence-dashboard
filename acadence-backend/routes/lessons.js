@@ -261,15 +261,18 @@ router.patch('/:id/complete', authenticateToken, async (req, res) => {
         });
         
         if (todayActivity) {
+          // Already completed at least one lesson today
           todayActivity.lessonsCompleted += 1;
+          console.log(`✅ Lesson added to today's activity. Total today: ${todayActivity.lessonsCompleted}`);
+          // Streak already updated for today, don't change it
         } else {
-          // New day - add activity log
+          // First lesson of a new day - add activity log
           user.activityLog.push({
             date: today,
             lessonsCompleted: 1
           });
           
-          // Calculate streak
+          // Calculate and update streak
           if (user.lastActivityDate) {
             const lastActivity = new Date(user.lastActivityDate);
             lastActivity.setHours(0, 0, 0, 0);
@@ -277,24 +280,27 @@ router.patch('/:id/complete', authenticateToken, async (req, res) => {
             yesterday.setDate(yesterday.getDate() - 1);
             
             if (lastActivity.getTime() === yesterday.getTime()) {
+              // Consecutive day - increment streak
               user.currentStreak += 1;
               console.log(`🔥 Streak continued! Now at ${user.currentStreak} days`);
-            } else if (lastActivity.getTime() === today.getTime()) {
-              // Same day, don't change streak
             } else {
+              // Gap in activity - reset streak to 1
               user.currentStreak = 1;
-              console.log(`🔥 New streak started!`);
+              console.log(`🔥 Streak reset to 1 (gap detected)`);
             }
           } else {
+            // First ever activity
             user.currentStreak = 1;
             console.log(`🔥 First streak day!`);
           }
           
+          // Update longest streak if current is higher
           if (user.currentStreak > user.longestStreak) {
             user.longestStreak = user.currentStreak;
             console.log(`🏆 New longest streak: ${user.longestStreak}`);
           }
           
+          // Update last activity date to today
           user.lastActivityDate = today;
         }
         

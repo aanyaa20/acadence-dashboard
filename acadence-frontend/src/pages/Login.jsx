@@ -14,15 +14,48 @@ export default function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Client-side validation
+    if (!form.email.trim()) {
+      toast.error("Email is required");
+      return;
+    }
+    
+    // Email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(form.email)) {
+      toast.error("Invalid email format. Example: user@gmail.com");
+      return;
+    }
+    
+    if (!form.password.trim()) {
+      toast.error("Password is required");
+      return;
+    }
+    
+    if (form.password.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      return;
+    }
+    
     setLoading(true);
     try {
       const res = await loginUser(form.email, form.password);
       toast.success("Login successful!", { duration: 3000 });
       setTimeout(() => navigate("/dashboard"), 1500);
     } catch (err) {
-      toast.error(err.response?.data?.message || "Login failed", {
-        duration: 3000,
-      });
+      const errorMessage = err.response?.data?.message;
+      
+      // Detailed error messages
+      if (errorMessage?.toLowerCase().includes('user not found') || errorMessage?.toLowerCase().includes('does not exist')) {
+        toast.error("Account not found. Please sign up first.");
+      } else if (errorMessage?.toLowerCase().includes('invalid') && errorMessage?.toLowerCase().includes('password')) {
+        toast.error("Incorrect password. Please try again.");
+      } else if (errorMessage?.toLowerCase().includes('invalid') && errorMessage?.toLowerCase().includes('credentials')) {
+        toast.error("Invalid email or password");
+      } else {
+        toast.error(errorMessage || "Login failed. Please check your credentials.");
+      }
     } finally {
       setLoading(false);
     }

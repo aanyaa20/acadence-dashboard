@@ -14,15 +14,64 @@ export default function Signup() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Client-side validation
+    if (!form.name.trim()) {
+      toast.error("Name is required");
+      return;
+    }
+    
+    if (form.name.trim().length < 2) {
+      toast.error("Name must be at least 2 characters");
+      return;
+    }
+    
+    if (!form.email.trim()) {
+      toast.error("Email is required");
+      return;
+    }
+    
+    // Email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(form.email)) {
+      toast.error("Invalid email format. Example: user@gmail.com");
+      return;
+    }
+    
+    // Check for common email typos
+    if (form.email.includes('.gmail@') || form.email.includes('.yahoo@')) {
+      toast.error("Invalid email format. Did you mean @gmail.com or @yahoo.com?");
+      return;
+    }
+    
+    if (!form.password.trim()) {
+      toast.error("Password is required");
+      return;
+    }
+    
+    if (form.password.length < 6) {
+      toast.error("Password must be at least 6 characters long");
+      return;
+    }
+    
     setLoading(true);
     try {
       const res = await signup(form.name, form.email, form.password);
       toast.success(res.message || "Signup successful!", { duration: 3000 });
       setTimeout(() => navigate("/login"), 1500);
     } catch (err) {
-      toast.error(err.response?.data?.message || "Signup failed", {
-        duration: 3000,
-      });
+      const errorMessage = err.response?.data?.message;
+      
+      // Detailed error messages
+      if (errorMessage?.toLowerCase().includes('already exists') || errorMessage?.toLowerCase().includes('already registered')) {
+        toast.error("Email already registered. Please login instead.");
+      } else if (errorMessage?.toLowerCase().includes('invalid email')) {
+        toast.error("Invalid email format. Please use a valid email address.");
+      } else if (errorMessage?.toLowerCase().includes('password')) {
+        toast.error(errorMessage || "Password requirements not met");
+      } else {
+        toast.error(errorMessage || "Signup failed. Please try again.");
+      }
     } finally {
       setLoading(false);
     }

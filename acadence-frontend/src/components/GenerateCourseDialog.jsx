@@ -5,7 +5,7 @@ export default function GenerateCourseDialog({ isOpen, onClose, onGenerate, isGe
   const [formData, setFormData] = useState({
     topic: "",
     difficulty: "beginner",
-    numberOfLessons: 5,
+    numberOfLessons: 3,
   });
 
   const [errors, setErrors] = useState({});

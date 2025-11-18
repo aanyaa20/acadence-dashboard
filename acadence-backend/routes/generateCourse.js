@@ -26,11 +26,11 @@ const createCoursePrompt = (topic, difficulty, numberOfLessons) => {
 
 CRITICAL RULES:
 1. Respond with ONLY valid JSON - no markdown, no code blocks, no extra text
-2. Make content DETAILED and educational
-3. Each lesson: 500-800 words with thorough explanations, examples, and code snippets
+2. Make content FOCUSED and educational
+3. Each lesson: 200-300 words with clear explanations and key examples
 4. Include relevant YouTube search terms for each lesson
-5. Description: 150-200 words
-6. Quiz: 5-10 challenging questions with detailed answers
+5. Description: 100-150 words
+6. Quiz: 3-5 questions with explanations
 
 Generate exactly ${numberOfLessons} lessons.
 
@@ -39,18 +39,18 @@ JSON format:
   "course": {
     "title": "Course title",
     "topic": "${topic}",
-    "description": "Comprehensive 150-200 word description covering what students will learn",
+    "description": "Comprehensive 100-150 word description covering what students will learn",
     "difficulty": "${difficulty}",
-    "estimatedDuration": "e.g. 4-6 hours",
+    "estimatedDuration": "e.g. 2-3 hours",
     "learningObjectives": ["objective 1", "objective 2", "objective 3", "objective 4", "objective 5"]
   },
   "lessons": [
     {
       "title": "Lesson title",
-      "content": "DETAILED 500-800 word lesson content with thorough explanations, real-world examples, code snippets (if applicable), best practices, and practical tips. Include headings, bullet points, and structured content.",
+      "content": "FOCUSED 200-300 word lesson content with clear explanations, practical examples, code snippets (if applicable), and key takeaways. Include headings, bullet points, and structured content.",
       "order": 1,
       "points": 20,
-      "duration": "30-45 minutes",
+      "duration": "20-30 minutes",
       "videoSearchTerm": "Relevant YouTube search term for this lesson"
     }
   ],
@@ -67,14 +67,15 @@ JSON format:
     ],
     "score": 50
   }
+  }
 }
 
-- Include exactly 5-6 challenging quiz questions with 4 options each
-- Make content DETAILED and comprehensive
-- Include practical examples and explanations
+- Include exactly 3-5 quiz questions with 4 options each
+- Make content FOCUSED and practical
+- Include clear examples and explanations
 - Provide video search terms for multimedia learning
 
-Generate now. Return ONLY the JSON object.`;
+Generate now. Return ONLY the JSON object. Be concise but educational.`;
 };
 
 // POST /api/generate-course - Generate a new course using Gemini AI
@@ -95,7 +96,7 @@ router.post("/", authenticateToken, async (req, res) => {
     logToFile("Request Body: " + JSON.stringify(req.body, null, 2));
     logToFile("User from token: " + JSON.stringify(req.user, null, 2));
     
-    const { topic, difficulty = "beginner", numberOfLessons = 5 } = req.body;
+    const { topic, difficulty = "beginner", numberOfLessons = 3 } = req.body;
     const userId = req.user.id || req.user.userId;
 
     console.log("Extracted userId:", userId);
@@ -499,14 +500,24 @@ router.post("/quick", authenticateToken, async (req, res) => {
           `Create real-world ${topic} projects`
         ]
       },
-      lessons: Array.from({ length: numberOfLessons }, (_, i) => ({
-        title: `${topic.charAt(0).toUpperCase() + topic.slice(1)} - Lesson ${i + 1}`,
-        content: `<h3>Introduction to Lesson ${i + 1}</h3>\n\nThis lesson covers essential concepts in ${topic}. You'll learn key techniques and best practices that are fundamental to mastering this subject.\n\n<h3>Key Concepts</h3>\n<ul>\n<li>Understanding the fundamentals</li>\n<li>Practical applications</li>\n<li>Best practices and patterns</li>\n<li>Real-world examples</li>\n</ul>\n\n<h3>Hands-on Practice</h3>\nApply what you've learned through practical exercises and examples. Focus on building your skills progressively.\n\n<b>Remember:</b> Practice is key to mastering ${topic}. Take your time with each concept and build a strong foundation.`,
-        order: i + 1,
-        points: 20,
-        duration: "45 minutes",
-        videoSearchTerm: `${topic} tutorial lesson ${i + 1}`
-      })),
+      lessons: Array.from({ length: numberOfLessons }, (_, i) => {
+        const lessonTopics = {
+          1: { title: `Introduction to ${topic}`, content: `<h3>Welcome to ${topic}</h3>\n\nIn this foundational lesson, you'll discover what makes ${topic} essential in today's technology landscape. We'll explore core concepts, terminology, and real-world applications that demonstrate why ${topic} matters.\n\n<h3>What You'll Learn</h3>\n<ul>\n<li><b>Core Definitions:</b> Understanding key ${topic} terminology and concepts</li>\n<li><b>Historical Context:</b> How ${topic} evolved and why it's important today</li>\n<li><b>Practical Applications:</b> Real-world use cases and industry examples</li>\n<li><b>Getting Started:</b> Tools and resources you'll need</li>\n</ul>\n\n<h3>Key Takeaway</h3>\n<b>Foundation First:</b> Mastering ${topic} starts with understanding the fundamentals. Take time to absorb these concepts—they'll serve as building blocks for everything that follows.` },
+          2: { title: `Core Concepts in ${topic}`, content: `<h3>Deep Dive into ${topic} Fundamentals</h3>\n\nNow that you understand the basics, let's explore the core principles that power ${topic}. This lesson focuses on practical techniques and patterns used by professionals.\n\n<h3>Essential Concepts</h3>\n<ul>\n<li><b>Key Principles:</b> The fundamental rules and best practices in ${topic}</li>\n<li><b>Common Patterns:</b> Proven approaches used across ${topic} projects</li>\n<li><b>Problem-Solving:</b> How to think through ${topic} challenges</li>\n<li><b>Code Examples:</b> Practical demonstrations of concepts in action</li>\n</ul>\n\n<h3>Hands-On Learning</h3>\nTheory meets practice here. Work through examples, experiment with concepts, and build your intuition for ${topic}. The more you practice, the more natural it becomes.\n\n<b>Pro Tip:</b> Don't just read—actually try implementing these concepts yourself!` },
+          3: { title: `Advanced ${topic} Techniques`, content: `<h3>Level Up Your ${topic} Skills</h3>\n\nYou've got the foundations—now let's explore advanced techniques that separate beginners from professionals in ${topic}.\n\n<h3>Advanced Topics</h3>\n<ul>\n<li><b>Optimization:</b> Making your ${topic} implementations faster and more efficient</li>\n<li><b>Best Practices:</b> Industry-standard approaches to ${topic}</li>\n<li><b>Common Pitfalls:</b> Mistakes to avoid and how to fix them</li>\n<li><b>Real Projects:</b> Applying ${topic} to production-quality applications</li>\n</ul>\n\n<h3>Building Expertise</h3>\nMastery comes from deliberate practice. Apply these advanced concepts to your own projects, experiment with different approaches, and learn from both successes and failures.\n\n<b>Next Steps:</b> Combine everything you've learned to build complete ${topic} projects!` }
+        };
+        
+        const lessonData = lessonTopics[i + 1] || lessonTopics[1];
+        
+        return {
+          title: lessonData.title,
+          content: lessonData.content,
+          order: i + 1,
+          points: 20,
+          duration: "45 minutes",
+          videoSearchTerm: `${topic} tutorial lesson ${i + 1}`
+        };
+      }),
       quiz: {
         title: `${topic.charAt(0).toUpperCase() + topic.slice(1)} Quiz`,
         description: `Test your knowledge of ${topic} concepts`,

@@ -662,8 +662,17 @@ export default function Dashboard() {
             </div>
 
             {/* Modern Calendar Component */}
-        <div className="mt-1.5 p-2 rounded-xl bg-[#1e1f2b] border border-[#2d2f3b]">
-  <h4 className="text-[9px] font-semibold mb-1 uppercase tracking-wide text-gray-400 text-center">
+        <div 
+          className="mt-1.5 p-2 rounded-xl border" 
+          style={{ 
+            backgroundColor: 'var(--color-bg-secondary)',
+            borderColor: 'var(--color-border-light)'
+          }}
+        >
+  <h4 
+    className="text-[9px] font-semibold mb-1 uppercase tracking-wide text-center"
+    style={{ color: 'var(--color-text-tertiary)' }}
+  >
     Activity Calendar
   </h4>
   <div className="flex justify-center">

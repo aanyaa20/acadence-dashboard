@@ -23,14 +23,20 @@ router.get('/user', authenticateToken, async (req, res) => {
 // Get all courses for the authenticated user
 router.get('/', authenticateToken, async (req, res) => {
   try {
+    console.log('📨 GET /api/courses - Fetching user courses');
     const userId = req.user.id || req.user.userId;
+    console.log('👤 User ID:', userId);
+    
     const courses = await Course.find({ userId: userId })
       .populate('userId', 'name email')
       .sort({ createdAt: -1 });
-
+    
+    console.log(`✅ Found ${courses.length} courses for user ${userId}`);
     res.json(courses);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('❌ Error in GET /api/courses:', error);
+    console.error('Error stack:', error.stack);
+    res.status(500).json({ message: error.message, error: error.toString() });
   }
 });
 
