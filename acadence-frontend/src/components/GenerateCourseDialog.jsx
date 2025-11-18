@@ -41,7 +41,10 @@ export default function GenerateCourseDialog({ isOpen, onClose, onGenerate, isGe
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-50 p-4" style={{ backdropFilter: 'blur(8px)', backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+    <div
+      className="fixed inset-0 flex items-center justify-center z-50 p-4"
+      style={{ backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', backgroundColor: 'transparent' }}
+    >
       <div
         className="rounded-2xl shadow-2xl max-w-md w-full p-6 relative animate-scale-in border"
         style={{
