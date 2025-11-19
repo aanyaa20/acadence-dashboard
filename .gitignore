@@ -1,2 +1,7 @@
 .env
 node_modules
+
+# Documentation (local only)
+docs/
+*.md
+!README.md
