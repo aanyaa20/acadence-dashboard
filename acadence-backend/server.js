@@ -8,6 +8,7 @@ import lessonRoutes from "./routes/lessons.js";
 import quizRoutes from "./routes/quizzes.js";
 import generateCourseRoutes from "./routes/generateCourse.js";
 import contactRoutes from "./routes/contact.js";
+import exportRoutes from "./routes/export.js";
 import { getChatbotModel } from "./config/gemini.js";
 
 dotenv.config();
@@ -127,6 +128,7 @@ app.use("/api/lessons", lessonRoutes);
 app.use("/api/quizzes", quizRoutes);
 app.use("/api/generate-course", generateCourseRoutes);
 app.use("/api/contact", contactRoutes);
+app.use("/api/export", exportRoutes);
 
 // ✅ AI-Powered Recommendations endpoint
 app.get("/api/recommendations/:userId", async (req, res) => {

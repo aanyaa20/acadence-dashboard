@@ -3,7 +3,7 @@
 ## Overview
 This integration uses Google's Gemini AI to automatically generate complete educational courses with lessons and quizzes based on user-provided topics.
 
-## 📁 File Structure
+##  File Structure
 
 ```
 acadence-backend/
